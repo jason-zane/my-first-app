@@ -3,17 +3,58 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
+import { createAdminClient } from '@/utils/supabase/admin'
+import { getPasswordRedirectUrl } from '@/utils/auth-urls'
 
 export async function login(formData: FormData) {
   const supabase = await createClient()
+  const email = String(formData.get('email') ?? '')
+    .trim()
+    .toLowerCase()
+  const password = String(formData.get('password') ?? '')
 
   const { error } = await supabase.auth.signInWithPassword({
-    email: formData.get('email') as string,
-    password: formData.get('password') as string,
+    email,
+    password,
   })
 
   if (error) {
     redirect('/login?error=' + encodeURIComponent(error.message))
+  }
+
+  // Backstop: ensure every authenticated user has a profile row even if DB trigger is missing.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (user) {
+    const adminClient = createAdminClient()
+    if (adminClient) {
+      const { data: existingProfile } = await adminClient
+        .from('profiles')
+        .select('user_id')
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+      if (!existingProfile) {
+        await adminClient.from('profiles').insert({
+          user_id: user.id,
+          role: 'staff',
+          updated_at: new Date().toISOString(),
+        })
+      }
+    }
+  }
+
+  const enforceTotp = process.env.ENFORCE_ADMIN_TOTP !== 'false'
+  if (enforceTotp) {
+    const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+    if (aalData?.currentLevel !== 'aal2') {
+      const { data: factorsData } = await supabase.auth.mfa.listFactors()
+      const hasVerifiedTotp = factorsData?.totp?.some((factor) => factor.status === 'verified') ?? false
+      const dest = hasVerifiedTotp ? '/mfa/totp/verify' : '/mfa/totp/enroll'
+      revalidatePath('/', 'layout')
+      redirect(`${dest}?next=/dashboard`)
+    }
   }
 
   revalidatePath('/', 'layout')
@@ -21,19 +62,28 @@ export async function login(formData: FormData) {
 }
 
 export async function signup(formData: FormData) {
-  const supabase = await createClient()
+  void formData
+  redirect('/login?error=' + encodeURIComponent('Account creation is invite-only.'))
+}
 
-  const { error } = await supabase.auth.signUp({
-    email: formData.get('email') as string,
-    password: formData.get('password') as string,
-  })
+export async function requestPasswordReset(formData: FormData) {
+  const email = String(formData.get('email') ?? '')
+    .trim()
+    .toLowerCase()
 
-  if (error) {
-    redirect('/signup?error=' + encodeURIComponent(error.message))
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    redirect('/login?reset_error=invalid_email')
   }
 
-  revalidatePath('/', 'layout')
-  redirect('/dashboard')
+  const supabase = await createClient()
+  await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: getPasswordRedirectUrl('reset'),
+  })
+
+  redirect(
+    '/login?message=' +
+      encodeURIComponent('If that email is registered, a reset link has been sent.')
+  )
 }
 
 export async function logout() {

@@ -1,11 +1,11 @@
-import { login } from '@/app/auth/actions'
+import { login, requestPasswordReset } from '@/app/auth/actions'
 
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>
+  searchParams: Promise<{ error?: string; message?: string; reset_error?: string }>
 }) {
-  const { error } = await searchParams
+  const { error, message, reset_error } = await searchParams
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-black">
@@ -16,6 +16,16 @@ export default async function LoginPage({
         {error && (
           <p className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
             {error}
+          </p>
+        )}
+        {reset_error && (
+          <p className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
+            Invalid email format.
+          </p>
+        )}
+        {message && (
+          <p className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300">
+            {message}
           </p>
         )}
         <form action={login} className="flex flex-col gap-4">
@@ -59,14 +69,28 @@ export default async function LoginPage({
           </button>
         </form>
         <p className="mt-4 text-center text-sm text-zinc-600 dark:text-zinc-400">
-          Don&apos;t have an account?{' '}
-          <a
-            href="/signup"
-            className="font-medium text-zinc-900 underline-offset-4 hover:underline dark:text-zinc-50"
-          >
-            Sign up
-          </a>
+          Account access is invite-only.
         </p>
+        <details className="mt-6">
+          <summary className="cursor-pointer text-sm text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200">
+            Forgot your password?
+          </summary>
+          <form action={requestPasswordReset} className="mt-3 flex flex-col gap-3">
+            <input
+              type="email"
+              name="email"
+              placeholder="your@email.com"
+              required
+              className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:ring-zinc-400"
+            />
+            <button
+              type="submit"
+              className="rounded-full border border-zinc-300 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+            >
+              Send reset link
+            </button>
+          </form>
+        </details>
       </div>
     </div>
   )

@@ -26,6 +26,8 @@ const lora = Lora({
 export default function Home() {
   const [scrolled, setScrolled] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60)
@@ -33,9 +35,40 @@ export default function Home() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  function handleSubmit(e: React.SyntheticEvent) {
+  async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
-    setSubmitted(true)
+    setSubmitError(null)
+    setIsSubmitting(true)
+
+    const form = e.currentTarget
+    const formData = new FormData(form)
+
+    try {
+      const response = await fetch('/api/register-interest', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) {
+        let errorMessage = 'Unable to submit right now.'
+        const payload = (await response.json().catch(() => null)) as { error?: string } | null
+        if (payload?.error) {
+          errorMessage = payload.error
+        }
+        throw new Error(errorMessage)
+      }
+
+      setSubmitted(true)
+      form.reset()
+    } catch (error) {
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : 'Something went wrong. Please try again in a moment.'
+      )
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -411,10 +444,15 @@ export default function Home() {
               {/* [PALETTE: submit button] Version A: bg-[#2C4A3E] hover:bg-[#1E3530] text-[#FAF8F4] | Version B/C: bg-stone-900 hover:bg-stone-700 text-white */}
               <button
                 type="submit"
+                disabled={isSubmitting}
                 className="mt-3 w-full bg-[#2C4A3E] py-4 text-sm font-medium text-[#FAF8F4] transition-colors duration-200 hover:bg-[#1E3530]"
               >
-                Register My Interest
+                {isSubmitting ? 'Submitting...' : 'Register My Interest'}
               </button>
+
+              {submitError ? (
+                <p className="text-center text-sm text-red-700">{submitError}</p>
+              ) : null}
 
               <p className="text-center text-xs text-stone-400">
                 No spam. We'll only contact you with meaningful updates.
