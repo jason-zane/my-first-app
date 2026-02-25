@@ -3,7 +3,11 @@ import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 import { renderTemplate } from '@/utils/email-templates'
 import { getRuntimeEmailTemplates } from '@/utils/services/email-templates'
-import { createInterestSubmission, linkSubmissionToContact } from '@/utils/services/submissions'
+import {
+  createInterestSubmission,
+  createSubmissionEvent,
+  linkSubmissionToContact,
+} from '@/utils/services/submissions'
 import { createContactEvent, upsertContactByEmail } from '@/utils/services/contacts'
 
 const resendApiKey = process.env.RESEND_API_KEY
@@ -14,13 +18,22 @@ const replyTo = process.env.RESEND_REPLY_TO
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
+const ALLOWED_FORM_KEYS = new Set(['retreat_registration_v1', 'general_registration_v1', 'register_interest'])
+
+function cleanText(value: FormDataEntryValue | null) {
+  const text = String(value ?? '').trim()
+  return text.length > 0 ? text : null
+}
+
+function parseFormKey(value: string | null) {
+  if (!value) return 'register_interest'
+  return ALLOWED_FORM_KEYS.has(value) ? value : 'register_interest'
+}
+
 export async function POST(request: Request) {
   try {
     if (!resendApiKey) {
-      return NextResponse.json(
-        { error: 'Email service is not configured.' },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: 'Email service is not configured.' }, { status: 500 })
     }
     if (!fromEmail || !notificationTo) {
       return NextResponse.json(
@@ -30,13 +43,23 @@ export async function POST(request: Request) {
     }
 
     const formData = await request.formData()
-    const firstName = String(formData.get('firstName') ?? '').trim()
-    const lastName = String(formData.get('lastName') ?? '').trim()
+    const firstName = cleanText(formData.get('firstName'))
+    const lastName = cleanText(formData.get('lastName'))
     const email = String(formData.get('email') ?? '')
       .trim()
       .toLowerCase()
-    const source = String(formData.get('source') ?? '').trim() || null
-    const notesRaw = String(formData.get('notes') ?? '').trim() || null
+
+    const source = cleanText(formData.get('source'))
+    const formKey = parseFormKey(cleanText(formData.get('formKey')))
+    const retreatSlug = cleanText(formData.get('retreatSlug'))
+    const retreatName = cleanText(formData.get('retreatName'))
+
+    const ageRange = cleanText(formData.get('ageRange'))
+    const runningVolumeRange = cleanText(formData.get('runningVolumeRange'))
+    const budgetRange = cleanText(formData.get('budgetRange'))
+    const locationLabel = cleanText(formData.get('locationLabel')) ?? cleanText(formData.get('city'))
+
+    const legacyNotes = cleanText(formData.get('notes'))
 
     if (!firstName || !lastName || !email) {
       return NextResponse.json({ error: 'Missing required fields.' }, { status: 400 })
@@ -46,10 +69,50 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid email address.' }, { status: 400 })
     }
 
+    if (formKey !== 'register_interest') {
+      if (!ageRange || !runningVolumeRange || !budgetRange || !locationLabel) {
+        return NextResponse.json(
+          { error: 'Please complete age, running volume, budget, and location.' },
+          { status: 400 }
+        )
+      }
+
+      if (formKey === 'retreat_registration_v1' && !retreatSlug) {
+        return NextResponse.json({ error: 'Retreat context is required for this form.' }, { status: 400 })
+      }
+    }
+
+    const answers = {
+      age_range: ageRange,
+      running_volume_range: runningVolumeRange,
+      budget_range: budgetRange,
+      location_label: locationLabel,
+      retreat_slug: retreatSlug,
+      retreat_name: retreatName,
+      source,
+    }
+
+    const rawPayload: Record<string, string | number | null> = {
+      firstName,
+      lastName,
+      email,
+      source,
+      formKey,
+      ageRange,
+      runningVolumeRange,
+      budgetRange,
+      locationLabel,
+      retreatSlug,
+      retreatName,
+      notes: legacyNotes,
+    }
+
     const adminClient =
       supabaseUrl && supabaseServiceRoleKey
         ? createClient(supabaseUrl, supabaseServiceRoleKey)
         : null
+
+    let submissionId: string | null = null
 
     if (adminClient) {
       const submissionResult = await createInterestSubmission(adminClient, {
@@ -57,6 +120,12 @@ export async function POST(request: Request) {
         lastName,
         email,
         source,
+        formKey,
+        schemaVersion: 1,
+        answers,
+        rawPayload,
+        reviewStatus: 'approved',
+        priority: 'normal',
         ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? null,
         userAgent: request.headers.get('user-agent') ?? null,
       })
@@ -66,7 +135,7 @@ export async function POST(request: Request) {
           return NextResponse.json(
             {
               error:
-                'Database table is missing. Run the interest_submissions SQL migration in Supabase.',
+                'Database table is missing. Run the latest Supabase migrations with npm run db:push.',
             },
             { status: 500 }
           )
@@ -79,6 +148,17 @@ export async function POST(request: Request) {
       }
 
       if (submissionResult.data?.id) {
+        submissionId = submissionResult.data.id
+
+        await createSubmissionEvent(adminClient, {
+          submissionId,
+          eventType: 'submitted',
+          eventData: {
+            form_key: formKey,
+            page_flow: formKey === 'retreat_registration_v1' ? 'retreat' : 'general',
+          },
+        })
+
         const contactResult = await upsertContactByEmail(adminClient, {
           firstName,
           lastName,
@@ -88,14 +168,15 @@ export async function POST(request: Request) {
 
         if (contactResult.data?.id) {
           const contactId = contactResult.data.id
-          await linkSubmissionToContact(adminClient, submissionResult.data.id, contactId)
+          await linkSubmissionToContact(adminClient, submissionId, contactId)
+
           await createContactEvent(adminClient, {
             contactId,
             eventType: 'submission',
             eventData: {
-              submission_id: submissionResult.data.id,
+              submission_id: submissionId,
               source,
-              status: 'new',
+              form_key: formKey,
             },
           })
         } else if (contactResult.error) {
@@ -107,8 +188,24 @@ export async function POST(request: Request) {
     const resend = new Resend(resendApiKey)
     const sourceLabel = source ?? 'Not provided'
     const templates = await getRuntimeEmailTemplates(adminClient)
-    const notesHtml = notesRaw
-      ? `<p><strong>Additional details:</strong></p><pre style="white-space:pre-wrap;font-size:13px">${notesRaw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>`
+
+    const summaryLines = [
+      formKey ? `Form type: ${formKey}` : null,
+      retreatName ? `Retreat: ${retreatName}` : null,
+      retreatSlug ? `Retreat slug: ${retreatSlug}` : null,
+      ageRange ? `Age range: ${ageRange}` : null,
+      runningVolumeRange ? `Weekly running: ${runningVolumeRange}` : null,
+      budgetRange ? `Budget range: ${budgetRange}` : null,
+      locationLabel ? `Location: ${locationLabel}` : null,
+      legacyNotes ? `Notes: ${legacyNotes}` : null,
+    ].filter(Boolean)
+
+    const notesHtml = summaryLines.length
+      ? `<p><strong>Additional details:</strong></p><pre style="white-space:pre-wrap;font-size:13px">${summaryLines
+          .join('\n')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')}</pre>`
       : ''
 
     const templateVars = {
@@ -161,7 +258,7 @@ export async function POST(request: Request) {
       )
     }
 
-    return NextResponse.json({ ok: true })
+    return NextResponse.json({ ok: true, submissionId, next: 'optional_profile' })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown server error.'
     console.error('register-interest error:', message)

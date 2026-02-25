@@ -5,6 +5,12 @@ export type CreateInterestSubmissionInput = {
   lastName: string
   email: string
   source: string | null
+  formKey?: string
+  schemaVersion?: number
+  answers: Record<string, string | number | null>
+  rawPayload: Record<string, string | number | null>
+  reviewStatus?: 'pending_review' | 'approved' | 'changes_requested'
+  priority?: 'low' | 'normal' | 'high'
   ipAddress: string | null
   userAgent: string | null
 }
@@ -26,6 +32,13 @@ export async function createInterestSubmission(
       last_name: input.lastName,
       email: input.email,
       source: input.source,
+      form_key: input.formKey ?? 'register_interest',
+      schema_version: input.schemaVersion ?? 1,
+      answers: input.answers,
+      raw_payload: input.rawPayload,
+      review_status: input.reviewStatus ?? 'approved',
+      priority: input.priority ?? 'normal',
+      updated_at: new Date().toISOString(),
       ip_address: input.ipAddress,
       user_agent: input.userAgent,
     })
@@ -57,6 +70,25 @@ export async function linkSubmissionToContact(
     .from('interest_submissions')
     .update({ contact_id: contactId })
     .eq('id', submissionId)
+
+  return { error: error?.message ?? null }
+}
+
+export async function createSubmissionEvent(
+  client: SupabaseClient,
+  input: {
+    submissionId: string
+    eventType: string
+    eventData?: Record<string, string | number | boolean | null>
+    actorUserId?: string | null
+  }
+): Promise<{ error: string | null }> {
+  const { error } = await client.from('submission_events').insert({
+    submission_id: input.submissionId,
+    event_type: input.eventType,
+    event_data: input.eventData ?? {},
+    actor_user_id: input.actorUserId ?? null,
+  })
 
   return { error: error?.message ?? null }
 }
