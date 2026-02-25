@@ -23,6 +23,7 @@ export const defaultEmailTemplates: Record<EmailTemplateKey, TemplateRuntimeShap
       <p><strong>Name:</strong> {{first_name}} {{last_name}}</p>
       <p><strong>Email:</strong> {{email}}</p>
       <p><strong>Source:</strong> {{source}}</p>
+      {{notes}}
     `,
     text: [
       'New Register Interest submission',
@@ -30,6 +31,7 @@ export const defaultEmailTemplates: Record<EmailTemplateKey, TemplateRuntimeShap
       'Name: {{first_name}} {{last_name}}',
       'Email: {{email}}',
       'Source: {{source}}',
+      '{{notes}}',
     ].join('\n'),
   },
   interest_user_confirmation: {

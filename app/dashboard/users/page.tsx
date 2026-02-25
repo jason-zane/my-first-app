@@ -1,6 +1,8 @@
+import Link from 'next/link'
 import { Suspense } from 'react'
 import { createAdminClient } from '@/utils/supabase/admin'
 import { createClient } from '@/utils/supabase/server'
+import { requireDashboardUser } from '@/utils/dashboard-auth'
 import { Badge } from '@/components/ui/badge'
 import { Avatar } from '@/components/ui/avatar'
 import { CopyEmail } from '@/components/ui/copy-email'
@@ -45,6 +47,32 @@ export default async function UsersPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   await searchParams
+  const auth = await requireDashboardUser()
+  if (!auth.authorized) {
+    return null
+  }
+  if (auth.role !== 'admin') {
+    return (
+      <section>
+        <h1 className="mb-2 text-xl font-semibold text-zinc-900 dark:text-zinc-50">Users</h1>
+        <p className="mb-6 text-sm text-zinc-500 dark:text-zinc-400">
+          User management is restricted to admin accounts.
+        </p>
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-900/20 dark:text-amber-300">
+          Your account can use the rest of the backend, but only admins can invite users, change
+          roles, reset MFA, or remove accounts.
+        </div>
+        <div className="mt-4">
+          <Link
+            href="/dashboard"
+            className="inline-flex rounded-full border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          >
+            Back to Overview
+          </Link>
+        </div>
+      </section>
+    )
+  }
 
   const adminClient = createAdminClient()
   const supabase = await createClient()

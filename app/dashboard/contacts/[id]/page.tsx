@@ -2,7 +2,8 @@ import { Suspense } from 'react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createAdminClient } from '@/utils/supabase/admin'
-import { addContactNote, updateContactStatus } from '@/app/dashboard/contacts/actions'
+import { addContactNote, sendContactEmail, updateContactStatus } from '@/app/dashboard/contacts/actions'
+import { renderTemplate } from '@/utils/email-templates'
 import { StatusBadge } from '@/components/ui/badge'
 import { Avatar } from '@/components/ui/avatar'
 import { CopyEmail } from '@/components/ui/copy-email'
@@ -34,20 +35,53 @@ type ContactEvent = {
   created_at: string
 }
 
+type ContactEmail = {
+  id: string
+  subject: string
+  sent_to_email: string
+  sent_at: string
+}
+
+type EmailTemplate = {
+  key: string
+  name: string
+  status: string
+  subject: string
+  html_body: string
+  text_body: string | null
+}
+
 const eventTypeLabel: Record<string, string> = {
   note: 'Note',
   status_change: 'Status changed',
+  status_changed: 'Status changed',
   submission_linked: 'Submission linked',
+  submission_status_changed: 'Submission status changed',
   contact_created: 'Contact created',
+  email_sent: 'Email sent',
+}
+
+function htmlToText(html: string) {
+  return html
+    .replaceAll(/<br\s*\/?>/gi, '\n')
+    .replaceAll(/<\/p>/gi, '\n\n')
+    .replaceAll(/<[^>]+>/g, '')
+    .replaceAll('&nbsp;', ' ')
+    .replaceAll('&amp;', '&')
+    .replaceAll('&lt;', '<')
+    .replaceAll('&gt;', '>')
+    .trim()
 }
 
 export default async function ContactDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   const { id } = await params
+  const query = await searchParams
   const adminClient = createAdminClient()
 
   if (!adminClient) {
@@ -65,6 +99,8 @@ export default async function ContactDetailPage({
     { data: contactRow, error: contactError },
     { data: statuses },
     { data: eventRows, error: eventsError },
+    { data: emailRows, error: emailsError },
+    { data: templateRows, error: templatesError },
   ] = await Promise.all([
     adminClient
       .from('contacts')
@@ -78,6 +114,19 @@ export default async function ContactDetailPage({
       .eq('contact_id', id)
       .order('created_at', { ascending: false })
       .limit(100),
+    adminClient
+      .from('contact_emails')
+      .select('id, subject, sent_to_email, sent_at')
+      .eq('contact_id', id)
+      .eq('direction', 'outbound')
+      .order('sent_at', { ascending: false })
+      .limit(30),
+    adminClient
+      .from('email_templates')
+      .select('key, name, status, subject, html_body, text_body')
+      .eq('channel', 'email')
+      .order('updated_at', { ascending: false })
+      .limit(100),
   ])
 
   if (contactError || !contactRow) notFound()
@@ -85,12 +134,51 @@ export default async function ContactDetailPage({
   const contact = contactRow as Contact
   const statusOptions = (statuses ?? []) as ContactStatus[]
   const events = ((eventsError ? [] : eventRows) ?? []) as ContactEvent[]
+  const emails = ((emailsError ? [] : emailRows) ?? []) as ContactEmail[]
+  const templates = ((templatesError ? [] : templateRows) ?? []) as EmailTemplate[]
   const fullName = `${contact.first_name} ${contact.last_name}`
+  const selectedTemplateKey = typeof query.template === 'string' ? query.template : ''
+  const selectedTemplate =
+    selectedTemplateKey.length > 0 ? templates.find((template) => template.key === selectedTemplateKey) : null
+  const variables = {
+    first_name: contact.first_name,
+    last_name: contact.last_name,
+    full_name: fullName,
+    email: contact.email,
+    source: contact.source ?? 'Website',
+  }
+  const renderedTemplate = selectedTemplate
+    ? renderTemplate(
+        {
+          subject: selectedTemplate.subject,
+          html: selectedTemplate.html_body,
+          text: selectedTemplate.text_body,
+        },
+        variables,
+        false
+      )
+    : null
+  const defaultSubject = renderedTemplate?.subject ?? ''
+  const defaultMessage =
+    renderedTemplate?.text?.trim() || (renderedTemplate ? htmlToText(renderedTemplate.html) : '')
 
   return (
     <section>
       <Suspense>
-        <ActionFeedback messages={{ note: 'Note saved.', status: 'Status updated.' }} />
+        <ActionFeedback
+          messages={{
+            note: 'Note saved.',
+            status: 'Status updated.',
+            email_sent: 'Email sent and logged to CRM.',
+          }}
+          errorMessages={{
+            invalid_email_fields: 'Subject and message are required.',
+            email_not_configured: 'Email sending is not configured in environment variables.',
+            email_send_failed: 'Could not send email. Check provider configuration and try again.',
+            email_log_failed: 'Email sent, but CRM logging failed. Please retry or check logs.',
+            contact_not_found: 'Could not find this contact record.',
+          }}
+        />
       </Suspense>
 
       {/* Breadcrumb */}
@@ -196,6 +284,63 @@ export default async function ContactDetailPage({
               </button>
             </form>
           </div>
+
+          {/* Send email */}
+          <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+              Send email
+            </h2>
+            <form method="get" className="mb-3 flex items-center gap-2">
+              <select
+                name="template"
+                defaultValue={selectedTemplateKey}
+                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:ring-zinc-400"
+              >
+                <option value="">No template (write manually)</option>
+                {templates.map((template) => (
+                  <option key={template.key} value={template.key}>
+                    {template.name} {template.status === 'draft' ? '(Draft)' : ''}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="submit"
+                className="shrink-0 rounded-full border border-zinc-300 px-3 py-2 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+              >
+                Apply template
+              </button>
+            </form>
+            <form action={sendContactEmail} className="space-y-3">
+              <input type="hidden" name="contact_id" value={contact.id} />
+              <input type="hidden" name="template_key" value={selectedTemplate?.key ?? ''} />
+              <input
+                type="text"
+                name="subject"
+                required
+                maxLength={180}
+                placeholder="Email subject"
+                defaultValue={defaultSubject}
+                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:ring-zinc-400"
+              />
+              <textarea
+                name="message"
+                rows={7}
+                required
+                placeholder="Write your message..."
+                defaultValue={defaultMessage}
+                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:ring-zinc-400"
+              />
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                Sends from your configured sender and logs in this contact’s timeline.
+              </p>
+              <button
+                type="submit"
+                className="w-full rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+              >
+                Send email
+              </button>
+            </form>
+          </div>
         </div>
 
         {/* Right column — timeline */}
@@ -240,6 +385,35 @@ export default async function ContactDetailPage({
                             ))}
                         </dl>
                       )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="mt-5 rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+              Email history
+            </h2>
+            {emails.length === 0 ? (
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">No direct emails sent yet.</p>
+            ) : (
+              <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                {emails.map((email) => (
+                  <div key={email.id} className="py-3 first:pt-0 last:pb-0">
+                    <Link
+                      href={`/dashboard/contacts/${contact.id}/emails/${email.id}`}
+                      className="text-sm font-medium text-zinc-900 hover:text-zinc-700 dark:text-zinc-50 dark:hover:text-zinc-300"
+                    >
+                      {email.subject}
+                    </Link>
+                    <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
+                      <span>To {email.sent_to_email}</span>
+                      <span>•</span>
+                      <span>
+                        <RelativeTime date={email.sent_at} />
+                      </span>
                     </div>
                   </div>
                 ))}

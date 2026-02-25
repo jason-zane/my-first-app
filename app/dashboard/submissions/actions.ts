@@ -3,19 +3,19 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createAdminClient } from '@/utils/supabase/admin'
-import { requireAdminUser } from '@/utils/dashboard-auth'
+import { requireDashboardUser } from '@/utils/dashboard-auth'
 import { upsertContactByEmail, createContactEvent } from '@/utils/services/contacts'
 import { linkSubmissionToContact } from '@/utils/services/submissions'
 
-async function ensureAdmin() {
-  const auth = await requireAdminUser()
+async function ensureDashboardUser() {
+  const auth = await requireDashboardUser()
   if (!auth.authorized) {
     redirect('/dashboard')
   }
 }
 
 export async function linkSubmissionContact(formData: FormData) {
-  await ensureAdmin()
+  await ensureDashboardUser()
 
   const submissionId = String(formData.get('submission_id') ?? '').trim()
   const firstName = String(formData.get('first_name') ?? '').trim()
@@ -68,7 +68,7 @@ export async function linkSubmissionContact(formData: FormData) {
 }
 
 export async function updateSubmissionStatus(formData: FormData) {
-  await ensureAdmin()
+  await ensureDashboardUser()
 
   const submissionId = String(formData.get('submission_id') ?? '').trim()
   const nextStatus = String(formData.get('status') ?? '').trim()

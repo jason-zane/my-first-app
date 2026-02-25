@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { logout } from '@/app/auth/actions'
-import { requireAdminUser } from '@/utils/dashboard-auth'
+import { requireDashboardUser } from '@/utils/dashboard-auth'
 import { createClient } from '@/utils/supabase/server'
 import { DashboardNav } from '@/components/dashboard/nav'
 
@@ -9,7 +9,7 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  const auth = await requireAdminUser()
+  const auth = await requireDashboardUser()
 
   if (!auth.authorized) {
     return (
@@ -63,7 +63,7 @@ export default async function DashboardLayout({
           </div>
 
           <div className="flex-1">
-            <DashboardNav />
+            <DashboardNav role={auth.role} />
           </div>
 
           <div className="mt-6 border-t border-zinc-200 pt-4 dark:border-zinc-800">

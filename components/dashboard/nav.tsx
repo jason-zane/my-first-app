@@ -40,8 +40,15 @@ const groups: NavGroup[] = [
   },
 ]
 
-export function DashboardNav() {
+export function DashboardNav({ role = 'admin' }: { role?: 'admin' | 'staff' }) {
   const pathname = usePathname()
+  const visibleGroups = groups.map((group) => ({
+    ...group,
+    items:
+      role === 'admin'
+        ? group.items
+        : group.items.filter((item) => item.href !== '/dashboard/users'),
+  }))
 
   function isActive(href: string, exact?: boolean) {
     return exact ? pathname === href : pathname === href || pathname.startsWith(href + '/')
@@ -49,7 +56,7 @@ export function DashboardNav() {
 
   return (
     <nav className="space-y-5">
-      {groups.map((group) => (
+      {visibleGroups.map((group) => (
         <div key={group.label}>
           <p className="mb-1.5 px-2 text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
             {group.label}

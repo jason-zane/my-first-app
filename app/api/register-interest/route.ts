@@ -36,6 +36,7 @@ export async function POST(request: Request) {
       .trim()
       .toLowerCase()
     const source = String(formData.get('source') ?? '').trim() || null
+    const notesRaw = String(formData.get('notes') ?? '').trim() || null
 
     if (!firstName || !lastName || !email) {
       return NextResponse.json({ error: 'Missing required fields.' }, { status: 400 })
@@ -106,11 +107,16 @@ export async function POST(request: Request) {
     const resend = new Resend(resendApiKey)
     const sourceLabel = source ?? 'Not provided'
     const templates = await getRuntimeEmailTemplates(adminClient)
+    const notesHtml = notesRaw
+      ? `<p><strong>Additional details:</strong></p><pre style="white-space:pre-wrap;font-size:13px">${notesRaw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>`
+      : ''
+
     const templateVars = {
       first_name: firstName,
       last_name: lastName,
       email,
       source: sourceLabel,
+      notes: notesHtml,
     }
 
     const internalNotification = renderTemplate(

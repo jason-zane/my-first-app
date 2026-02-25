@@ -1,23 +1,22 @@
+import Link from 'next/link'
 import { createAdminClient } from '@/utils/supabase/admin'
-import { defaultEmailTemplates, type EmailTemplateKey } from '@/utils/email-templates'
-import { updateEmailTemplate } from '@/app/dashboard/emails/actions'
 
 type EmailTemplateRow = {
-  key: EmailTemplateKey
+  key: string
+  slug: string
   name: string
   description: string | null
   subject: string
-  html_body: string
-  text_body: string | null
+  status: string
   updated_at: string
 }
 
-const templateLabels: Record<EmailTemplateKey, string> = {
-  interest_internal_notification: 'Internal Notification',
-  interest_user_confirmation: 'User Confirmation',
+type UsageRow = {
+  usage_key: string
+  usage_name: string
+  route_hint: string | null
+  template_key: string | null
 }
-
-const unknownDateIso = new Date(0).toISOString()
 
 export default async function EmailTemplatesPage({
   searchParams,
@@ -25,77 +24,106 @@ export default async function EmailTemplatesPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   const params = await searchParams
+  const q = typeof params.q === 'string' ? params.q.trim().toLowerCase() : ''
+  const statusFilter = typeof params.status === 'string' ? params.status : 'all'
+
   const adminClient = createAdminClient()
   let loadError: string | null = null
-
-  const fallbackRowsByKey = new Map(
-    (Object.keys(defaultEmailTemplates) as EmailTemplateKey[]).map((key) => [
-      key,
-      {
-        key,
-        name: templateLabels[key],
-        description: 'Using in-code fallback. Run latest migrations to make this editable.',
-        subject: defaultEmailTemplates[key].subject,
-        html_body: defaultEmailTemplates[key].html,
-        text_body: defaultEmailTemplates[key].text,
-        updated_at: unknownDateIso,
-      } satisfies EmailTemplateRow,
-    ])
-  )
-
-  let templateRows: EmailTemplateRow[] = (Object.keys(defaultEmailTemplates) as EmailTemplateKey[]).map(
-    (key) =>
-      fallbackRowsByKey.get(key) ?? {
-      key,
-      name: templateLabels[key],
-      description: 'Using in-code fallback. Run latest migrations to make this editable.',
-      subject: defaultEmailTemplates[key].subject,
-      html_body: defaultEmailTemplates[key].html,
-      text_body: defaultEmailTemplates[key].text,
-      updated_at: unknownDateIso,
-    }
-  )
+  let templateRows: EmailTemplateRow[] = []
+  let usageRows: UsageRow[] = []
 
   if (!adminClient) {
-    loadError = 'Missing SUPABASE_SERVICE_ROLE_KEY. Cannot load or save email templates.'
+    loadError = 'Missing SUPABASE_SERVICE_ROLE_KEY. Cannot load email templates.'
   } else {
-    const { data, error } = await adminClient
-      .from('email_templates')
-      .select('key, name, description, subject, html_body, text_body, updated_at')
-      .order('key', { ascending: true })
+    const [{ data: templatesData, error: templatesError }, { data: usagesData, error: usagesError }] =
+      await Promise.all([
+        adminClient
+          .from('email_templates')
+          .select('key, slug, name, description, subject, status, updated_at')
+          .order('updated_at', { ascending: false }),
+        adminClient
+          .from('email_template_usages')
+          .select('usage_key, usage_name, route_hint, template_key')
+          .order('usage_name', { ascending: true }),
+      ])
 
-    if (error) {
-      loadError = error.message
+    if (templatesError) {
+      loadError = templatesError.message
+    } else if (usagesError) {
+      loadError = usagesError.message
     } else {
-      const dbRows = (data ?? []) as EmailTemplateRow[]
-      const templatesByKey = new Map(dbRows.map((row) => [row.key, row]))
-      templateRows = (Object.keys(defaultEmailTemplates) as EmailTemplateKey[]).map((key) => {
-        return templatesByKey.get(key) ?? fallbackRowsByKey.get(key)!
-      })
+      templateRows = (templatesData ?? []) as EmailTemplateRow[]
+      usageRows = (usagesData ?? []) as UsageRow[]
     }
   }
 
-  const saveSucceeded = params.saved === '1'
-  const hasSaveError = typeof params.error === 'string'
+  const usagesByTemplateKey = new Map<string, UsageRow[]>()
+  for (const usage of usageRows) {
+    if (!usage.template_key) continue
+    const existing = usagesByTemplateKey.get(usage.template_key) ?? []
+    existing.push(usage)
+    usagesByTemplateKey.set(usage.template_key, existing)
+  }
+
+  const filtered = templateRows.filter((template) => {
+    if (statusFilter !== 'all' && template.status !== statusFilter) return false
+    if (!q) return true
+    const usageText = (usagesByTemplateKey.get(template.key) ?? [])
+      .map((usage) => `${usage.usage_name} ${usage.usage_key}`)
+      .join(' ')
+      .toLowerCase()
+
+    return (
+      template.name.toLowerCase().includes(q) ||
+      template.subject.toLowerCase().includes(q) ||
+      template.slug.toLowerCase().includes(q) ||
+      usageText.includes(q)
+    )
+  })
 
   return (
     <section>
-      <h1 className="mb-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">Email Templates</h1>
-      <p className="mb-6 text-sm text-zinc-500 dark:text-zinc-400">
-        Edit transactional email copy and variables.
-      </p>
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="mb-1 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">Email Templates</h1>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+            Create and manage emails with visual editing and usage mapping.
+          </p>
+        </div>
+        <Link
+          href="/dashboard/emails/new"
+          className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+        >
+          New Email Template
+        </Link>
+      </div>
 
-      {saveSucceeded ? (
-        <p className="mb-6 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300">
-          Email template saved.
-        </p>
-      ) : null}
-
-      {hasSaveError ? (
-        <p className="mb-6 rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-300">
-          Could not save template. Please verify migrations are up to date and try again.
-        </p>
-      ) : null}
+      <form className="mb-6 grid gap-3 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900 md:grid-cols-4">
+        <input
+          type="text"
+          name="q"
+          defaultValue={q}
+          placeholder="Search templates or attached flows..."
+          className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:ring-zinc-400 md:col-span-3"
+        />
+        <div className="flex gap-2">
+          <select
+            name="status"
+            defaultValue={statusFilter}
+            className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:ring-zinc-400"
+          >
+            <option value="all">All statuses</option>
+            <option value="active">Active</option>
+            <option value="draft">Draft</option>
+          </select>
+          <button
+            type="submit"
+            className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          >
+            Filter
+          </button>
+        </div>
+      </form>
 
       {loadError ? (
         <p className="mb-6 rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-300">
@@ -103,86 +131,51 @@ export default async function EmailTemplatesPage({
         </p>
       ) : null}
 
-      <div className="space-y-6">
-        {templateRows.map((template) => (
-          <form
-            key={template.key}
-            action={updateEmailTemplate}
-            className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
-          >
-            <input type="hidden" name="key" value={template.key} />
-            <div className="mb-4">
-              <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">{template.name}</h2>
-              <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-                {template.description ?? templateLabels[template.key]}
-              </p>
-              <p className="mt-1 text-xs text-zinc-400 dark:text-zinc-500">
-                Last updated:{' '}
-                {template.updated_at === unknownDateIso
-                  ? 'unknown'
-                  : new Date(template.updated_at).toLocaleString()}
-              </p>
-              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                Variables: <code>{'{{first_name}}'}</code>, <code>{'{{last_name}}'}</code>,{' '}
-                <code>{'{{email}}'}</code>, <code>{'{{source}}'}</code>
-              </p>
-            </div>
-
-            <div className="mb-4">
-              <label
-                htmlFor={`${template.key}-subject`}
-                className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-              >
-                Subject
-              </label>
-              <input
-                id={`${template.key}-subject`}
-                name="subject"
-                defaultValue={template.subject}
-                className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:ring-zinc-400"
-                required
-              />
-            </div>
-
-            <div className="mb-4">
-              <label
-                htmlFor={`${template.key}-html-body`}
-                className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-              >
-                HTML Body
-              </label>
-              <textarea
-                id={`${template.key}-html-body`}
-                name="html_body"
-                defaultValue={template.html_body}
-                className="min-h-48 w-full rounded-md border border-zinc-300 px-3 py-2 font-mono text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:ring-zinc-400"
-                required
-              />
-            </div>
-
-            <div className="mb-6">
-              <label
-                htmlFor={`${template.key}-text-body`}
-                className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-              >
-                Text Body (optional)
-              </label>
-              <textarea
-                id={`${template.key}-text-body`}
-                name="text_body"
-                defaultValue={template.text_body ?? ''}
-                className="min-h-32 w-full rounded-md border border-zinc-300 px-3 py-2 font-mono text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:ring-zinc-400"
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="rounded-full bg-zinc-900 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+      <div className="grid gap-4 md:grid-cols-2">
+        {filtered.map((template) => {
+          const usages = usagesByTemplateKey.get(template.key) ?? []
+          return (
+            <Link
+              key={template.key}
+              href={`/dashboard/emails/${template.key}`}
+              className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm transition-colors hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800/50"
             >
-              Save Template
-            </button>
-          </form>
-        ))}
+              <div className="mb-2 flex items-center gap-2">
+                <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-50">{template.name}</h2>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                    template.status === 'active'
+                      ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
+                      : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
+                  }`}
+                >
+                  {template.status}
+                </span>
+              </div>
+              <p className="truncate text-sm text-zinc-600 dark:text-zinc-300">Subject: {template.subject}</p>
+              <p className="mt-1 text-xs text-zinc-400 dark:text-zinc-500">Key: {template.key}</p>
+              <p className="mt-1 text-xs text-zinc-400 dark:text-zinc-500">
+                Updated: {new Date(template.updated_at).toLocaleString()}
+              </p>
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {usages.length > 0 ? (
+                  usages.map((usage) => (
+                    <span
+                      key={usage.usage_key}
+                      className="rounded bg-zinc-100 px-2 py-1 text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
+                    >
+                      {usage.usage_name}
+                    </span>
+                  ))
+                ) : (
+                  <span className="rounded bg-zinc-100 px-2 py-1 text-xs text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+                    Not attached
+                  </span>
+                )}
+              </div>
+            </Link>
+          )
+        })}
       </div>
     </section>
   )

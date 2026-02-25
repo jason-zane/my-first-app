@@ -13,11 +13,29 @@ type ProfileRoleRow = {
   role: 'admin' | 'staff'
 }
 
-export async function requireAdminUser() {
+type DashboardRole = 'admin' | 'staff'
+type DashboardUser = {
+  id: string
+  email?: string | null
+}
+
+type DashboardAuthResult =
+  | {
+      user: DashboardUser
+      authorized: true
+      role: DashboardRole
+      bootstrap?: true
+    }
+  | {
+      user: DashboardUser
+      authorized: false
+      role: null
+    }
+
+export async function requireDashboardUser(): Promise<DashboardAuthResult> {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { data } = await supabase.auth.getUser()
+  const user = data.user as DashboardUser | null
 
   if (!user) {
     redirect('/login')
@@ -33,15 +51,23 @@ export async function requireAdminUser() {
       .maybeSingle()
 
     const role = (data as ProfileRoleRow | null)?.role ?? null
-    if (role === 'admin') {
-      return { user, authorized: true as const }
+    if (role === 'admin' || role === 'staff') {
+      return { user, authorized: true as const, role }
     }
   }
 
   const allowBootstrap = process.env.ALLOW_ADMIN_EMAIL_BOOTSTRAP === 'true'
   if (allowBootstrap && isAdminEmail(user.email)) {
-    return { user, authorized: true as const, bootstrap: true as const }
+    return { user, authorized: true as const, role: 'admin' as DashboardRole, bootstrap: true as const }
   }
 
-  return { user, authorized: false as const }
+  return { user, authorized: false as const, role: null }
+}
+
+export async function requireAdminUser() {
+  const auth = await requireDashboardUser()
+  if (auth.authorized && auth.role === 'admin') {
+    return auth
+  }
+  return { user: auth.user, authorized: false as const, role: auth.role }
 }
