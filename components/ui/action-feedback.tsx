@@ -7,7 +7,13 @@ import { toast } from 'sonner'
 // Place this inside a <Suspense> boundary in each page.
 // It reads ?saved=... and ?error=... from the URL, fires the appropriate toast,
 // then clears those params from the URL so they don't linger.
-export function ActionFeedback({ messages }: { messages: Record<string, string> }) {
+export function ActionFeedback({
+  messages,
+  errorMessages = {},
+}: {
+  messages: Record<string, string>
+  errorMessages?: Record<string, string>
+}) {
   const searchParams = useSearchParams()
   const router = useRouter()
   const pathname = usePathname()
@@ -22,7 +28,7 @@ export function ActionFeedback({ messages }: { messages: Record<string, string> 
       toast.success(messages[saved] ?? 'Saved.')
     }
     if (error) {
-      toast.error('Could not complete that action.')
+      toast.error(errorMessages[error] ?? 'Could not complete that action.')
     }
 
     const params = new URLSearchParams(searchParams.toString())

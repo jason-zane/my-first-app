@@ -75,9 +75,16 @@ export async function requestPasswordReset(formData: FormData) {
     redirect('/login?reset_error=invalid_email')
   }
 
+  let redirectTo: string
+  try {
+    redirectTo = getPasswordRedirectUrl('reset')
+  } catch {
+    redirect('/login?reset_error=site_url_not_configured')
+  }
+
   const supabase = await createClient()
   await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: getPasswordRedirectUrl('reset'),
+    redirectTo,
   })
 
   redirect(

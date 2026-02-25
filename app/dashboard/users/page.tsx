@@ -30,6 +30,15 @@ const feedbackMessages: Record<string, string> = {
   mfa_reset: 'MFA reset. They will re-enrol on next login.',
 }
 
+const errorFeedbackMessages: Record<string, string> = {
+  site_url_not_configured:
+    'Production URL is missing. Set NEXT_PUBLIC_SITE_URL in Vercel production env vars.',
+  invite_redirect_not_allowed:
+    'Supabase blocked invite redirect URL. Add /set-password in Supabase Auth URL configuration.',
+  invite_email_provider_failed:
+    'Supabase invite email failed. Check SMTP/provider configuration.',
+}
+
 export default async function UsersPage({
   searchParams,
 }: {
@@ -41,7 +50,7 @@ export default async function UsersPage({
   const supabase = await createClient()
   let users: AuthUser[] = []
   let rolesByUserId = new Map<string, 'admin' | 'staff'>()
-  let mfaEnrolledUserIds = new Set<string>()
+  const mfaEnrolledUserIds = new Set<string>()
   let loadError: string | null = null
 
   const {
@@ -100,7 +109,7 @@ export default async function UsersPage({
   return (
     <section>
       <Suspense>
-        <ActionFeedback messages={feedbackMessages} />
+        <ActionFeedback messages={feedbackMessages} errorMessages={errorFeedbackMessages} />
       </Suspense>
 
       <div className="mb-6 flex items-start justify-between gap-4">

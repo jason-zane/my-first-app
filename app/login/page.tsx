@@ -20,7 +20,9 @@ export default async function LoginPage({
         )}
         {reset_error && (
           <p className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
-            Invalid email format.
+            {reset_error === 'site_url_not_configured'
+              ? 'Password reset is not configured for this environment. Contact support.'
+              : 'Invalid email format.'}
           </p>
         )}
         {message && (

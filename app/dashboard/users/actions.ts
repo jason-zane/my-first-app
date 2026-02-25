@@ -8,6 +8,13 @@ import { requireAdminUser } from '@/utils/dashboard-auth'
 import { getPasswordRedirectUrl } from '@/utils/auth-urls'
 
 const allowedRoles = new Set(['admin', 'staff'])
+type AdminAction =
+  | 'user_role_updated'
+  | 'user_invited'
+  | 'user_invite_role_updated'
+  | 'user_password_reset_sent'
+  | 'user_mfa_reset'
+  | 'user_removed'
 
 async function ensureAdmin() {
   const auth = await requireAdminUser()
@@ -47,6 +54,30 @@ async function findAuthUserIdByEmail(email: string) {
   return user?.id ?? null
 }
 
+async function logAdminAction(input: {
+  actorUserId: string
+  action: AdminAction
+  targetUserId?: string | null
+  targetEmail?: string | null
+  details?: Record<string, string | number | boolean | null>
+}) {
+  const adminClient = createAdminClient()
+  if (!adminClient) {
+    return
+  }
+
+  const { error } = await adminClient.from('admin_audit_logs').insert({
+    actor_user_id: input.actorUserId,
+    action: input.action,
+    target_user_id: input.targetUserId ?? null,
+    target_email: input.targetEmail ?? null,
+    details: input.details ?? {},
+  })
+  if (error) {
+    console.error('admin_audit_logs insert failed:', error.message)
+  }
+}
+
 export async function updateUserRole(formData: FormData) {
   const currentUser = await ensureAdmin()
 
@@ -78,12 +109,19 @@ export async function updateUserRole(formData: FormData) {
     redirect('/dashboard/users?error=role_update_failed')
   }
 
+  await logAdminAction({
+    actorUserId: currentUser.id,
+    action: 'user_role_updated',
+    targetUserId: userId,
+    details: { role },
+  })
+
   revalidatePath('/dashboard/users')
   redirect('/dashboard/users?saved=1')
 }
 
 export async function inviteUser(formData: FormData) {
-  await ensureAdmin()
+  const currentUser = await ensureAdmin()
 
   const email = String(formData.get('email') ?? '')
     .trim()
@@ -127,8 +165,15 @@ export async function inviteUser(formData: FormData) {
     redirect('/dashboard/users?saved=role_only')
   }
 
+  let inviteRedirectTo: string
+  try {
+    inviteRedirectTo = getPasswordRedirectUrl('set')
+  } catch {
+    redirect('/dashboard/users?error=site_url_not_configured')
+  }
+
   const { data: invited, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(email, {
-    redirectTo: getPasswordRedirectUrl('set'),
+    redirectTo: inviteRedirectTo,
   })
   if (inviteError) {
     const message = inviteError.message.toLowerCase()
@@ -158,12 +203,20 @@ export async function inviteUser(formData: FormData) {
     redirect('/dashboard/users?error=profile_failed')
   }
 
+  await logAdminAction({
+    actorUserId: currentUser.id,
+    action: 'user_invited',
+    targetUserId: invitedUserId,
+    targetEmail: email,
+    details: { role },
+  })
+
   revalidatePath('/dashboard/users')
   redirect('/dashboard/users?saved=invited_set_sent')
 }
 
 export async function sendPasswordResetEmail(formData: FormData) {
-  await ensureAdmin()
+  const currentUser = await ensureAdmin()
 
   const email = String(formData.get('email') ?? '')
     .trim()
@@ -177,19 +230,32 @@ export async function sendPasswordResetEmail(formData: FormData) {
     redirect('/dashboard/users?error=missing_public_supabase')
   }
 
+  let resetRedirectTo: string
+  try {
+    resetRedirectTo = getPasswordRedirectUrl('reset')
+  } catch {
+    redirect('/dashboard/users?error=site_url_not_configured')
+  }
+
   const { error } = await authClient.auth.resetPasswordForEmail(email, {
-    redirectTo: getPasswordRedirectUrl('reset'),
+    redirectTo: resetRedirectTo,
   })
 
   if (error) {
     redirect('/dashboard/users?error=password_reset_email_failed')
   }
 
+  await logAdminAction({
+    actorUserId: currentUser.id,
+    action: 'user_password_reset_sent',
+    targetEmail: email,
+  })
+
   redirect('/dashboard/users?saved=password_reset_sent')
 }
 
 export async function resetUserMfa(formData: FormData) {
-  await ensureAdmin()
+  const currentUser = await ensureAdmin()
 
   const userId = String(formData.get('user_id') ?? '').trim()
   if (!userId) {
@@ -218,6 +284,13 @@ export async function resetUserMfa(formData: FormData) {
     }
   }
 
+  await logAdminAction({
+    actorUserId: currentUser.id,
+    action: 'user_mfa_reset',
+    targetUserId: userId,
+    details: { factors_deleted: data?.factors?.length ?? 0 },
+  })
+
   revalidatePath('/dashboard/users')
   redirect('/dashboard/users?saved=mfa_reset')
 }
@@ -242,6 +315,12 @@ export async function removeUser(formData: FormData) {
   if (error) {
     redirect('/dashboard/users?error=remove_failed')
   }
+
+  await logAdminAction({
+    actorUserId: currentUser.id,
+    action: 'user_removed',
+    targetUserId: userId,
+  })
 
   revalidatePath('/dashboard/users')
   redirect('/dashboard/users?saved=removed')

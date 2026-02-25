@@ -1,19 +1,8 @@
 'use client'
 
-import { Playfair_Display, Lora } from 'next/font/google'
 import { useState, useEffect } from 'react'
-
-const playfair = Playfair_Display({
-  subsets: ['latin'],
-  weight: ['400', '700'],
-  style: ['normal', 'italic'],
-})
-
-const lora = Lora({
-  subsets: ['latin'],
-  weight: ['400', '500'],
-  style: ['normal', 'italic'],
-})
+const playfair = { className: 'font-serif' }
+const lora = { className: 'font-serif' }
 
 // ─── COLOUR PALETTE GUIDE ─────────────────────────────────────────────────────
 // Version A (applied): Deep forest green #2C4A3E / Warm white #FAF8F4 / Linen #EDE8DF
