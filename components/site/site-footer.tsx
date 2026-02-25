@@ -44,6 +44,14 @@ export function SiteFooter() {
             >
               hello@milesbetween.com.au
             </Link>
+            <div className="mt-4">
+              <Link
+                href="/#register"
+                className="inline-block border border-[#FAF8F4]/50 px-4 py-2 text-xs font-medium uppercase tracking-[0.12em] text-[#FAF8F4] transition-colors hover:bg-[#FAF8F4] hover:text-[#2C4A3E]"
+              >
+                Join Retreat List
+              </Link>
+            </div>
           </div>
         </div>
 

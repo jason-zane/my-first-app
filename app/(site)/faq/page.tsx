@@ -235,7 +235,7 @@ export default function FaqPage() {
                   href="/retreats/sydney-southern-highlands#register"
                   className="inline-block bg-[#2C4A3E] px-7 py-3.5 text-sm font-medium text-[#FAF8F4] transition-colors hover:bg-[#1E3530]"
                 >
-                  Register Interest
+                  Apply for This Retreat
                 </Link>
               </div>
             </div>

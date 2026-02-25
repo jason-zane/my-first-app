@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import { getRetreat } from '@/lib/retreats'
-import { RetreatInterestForm } from '@/components/site/retreat-interest-form'
+import { RegistrationForm } from '@/components/site/registration-form'
 import { ParallaxHero } from '@/components/site/parallax-hero'
 import { Reveal } from '@/components/site/reveal'
 import { CountUp } from '@/components/site/count-up'
@@ -64,7 +64,7 @@ export default async function RetreatPage({ params }: Props) {
                 href="#register"
                 className="inline-block bg-[#FAF8F4] px-8 py-4 text-sm font-medium text-[#2C4A3E] transition-colors hover:bg-white"
               >
-                Register Interest
+                Apply for This Retreat
               </a>
             </div>
           </Reveal>
@@ -332,7 +332,7 @@ export default async function RetreatPage({ params }: Props) {
                   href="#register"
                   className="block w-full bg-[#2C4A3E] py-4 text-center text-sm font-medium text-[#FAF8F4] transition-colors hover:bg-[#1E3530]"
                 >
-                  Register Interest
+                  Apply for This Retreat
                 </a>
                 <p className="mt-4 text-center text-xs text-stone-400">
                   Limited to {retreat.capacity} guests. No payment required to register interest.
@@ -350,19 +350,18 @@ export default async function RetreatPage({ params }: Props) {
             <Reveal delay={0.1}>
               <div>
                 <p className="mb-5 text-xs font-medium uppercase tracking-[0.2em] text-stone-400">
-                  Register Interest
+                  Apply
                 </p>
                 <h2 className="mb-6 font-serif text-4xl font-bold leading-[1.15] text-stone-900 md:text-5xl">
-                  Reserve your place.
+                  Apply for your place.
                 </h2>
                 <p className="mb-8 text-lg leading-relaxed text-stone-700">
-                  Places are limited to {retreat.capacity} guests. Register your interest and
-                  we'll reach out to confirm details and next steps — no payment required at this
-                  stage.
+                  Places are limited to {retreat.capacity} guests. Submit your details and we will
+                  reach out with next steps. No payment is required at this stage.
                 </p>
                 <div className="space-y-4 border-t border-stone-300 pt-8">
                   {[
-                    'Register your interest below',
+                    'Apply below in under a minute',
                     "We'll reach out to confirm your place",
                     `Secure your spot with a $${retreat.deposit} deposit`,
                   ].map((step, i) => (
@@ -379,7 +378,13 @@ export default async function RetreatPage({ params }: Props) {
 
             <Reveal delay={0.2}>
               <div className="bg-white p-8 md:p-10">
-                <RetreatInterestForm retreatSlug={retreat.slug} retreatName={retreat.name} />
+                <RegistrationForm
+                  mode="retreat"
+                  retreatSlug={retreat.slug}
+                  retreatName={retreat.name}
+                  source={`retreat:${retreat.slug}`}
+                  submitCtaLabel="Apply for This Retreat in 60 Seconds"
+                />
               </div>
             </Reveal>
           </div>

@@ -9,7 +9,6 @@ import { Avatar } from '@/components/ui/avatar'
 import { CopyEmail } from '@/components/ui/copy-email'
 import { RelativeTime } from '@/components/ui/relative-time'
 import { ActionFeedback } from '@/components/ui/action-feedback'
-import { ChevronRightIcon } from '@/components/icons'
 
 type Contact = {
   id: string
@@ -18,6 +17,24 @@ type Contact = {
   email: string
   source: string | null
   status: string
+  age_range: string | null
+  gender: string | null
+  gender_self_describe: string | null
+  runner_type: string | null
+  location_label: string | null
+  retreat_slug: string | null
+  retreat_name: string | null
+  budget_range: string | null
+  retreat_style_preference: string | null
+  duration_preference: string | null
+  travel_radius: string | null
+  accommodation_preference: string | null
+  community_vs_performance: string | null
+  preferred_season: string | null
+  gender_optional: string | null
+  life_stage_optional: string | null
+  what_would_make_it_great: string | null
+  profile_v2_updated_at: string | null
   created_at: string
   updated_at: string
 }
@@ -30,7 +47,7 @@ type ContactStatus = {
 type ContactEvent = {
   id: string
   event_type: string
-  event_data: Record<string, string | null> | null
+  event_data: Record<string, string | number | boolean | null> | null
   note: string | null
   created_at: string
 }
@@ -40,6 +57,7 @@ type ContactEmail = {
   subject: string
   sent_to_email: string
   sent_at: string
+  provider: string
 }
 
 type EmailTemplate = {
@@ -51,14 +69,33 @@ type EmailTemplate = {
   text_body: string | null
 }
 
-const eventTypeLabel: Record<string, string> = {
-  note: 'Note',
-  status_change: 'Status changed',
-  status_changed: 'Status changed',
-  submission_linked: 'Submission linked',
-  submission_status_changed: 'Submission status changed',
-  contact_created: 'Contact created',
-  email_sent: 'Email sent',
+type ContactSubmission = {
+  id: string
+  form_key: string
+  status: string
+  review_status: string
+  created_at: string
+}
+
+type ActivityItem = {
+  id: string
+  kind: 'email' | 'submission' | 'event'
+  type: 'email' | 'submission' | 'note' | 'status' | 'profile' | 'system'
+  title: string
+  subtitle: string
+  detail: string | null
+  createdAt: string
+  href: string
+}
+
+const EVENT_LABELS: Record<string, { type: ActivityItem['type']; title: string }> = {
+  note: { type: 'note', title: 'Internal note added' },
+  status_changed: { type: 'status', title: 'Contact status updated' },
+  profile_synced: { type: 'profile', title: 'Contact profile updated' },
+  profile_backfilled: { type: 'profile', title: 'Profile fields backfilled' },
+  submission_profile_autofill: { type: 'profile', title: 'Profile autofilled from submission' },
+  submission_review_applied: { type: 'profile', title: 'Reviewed submission field applied' },
+  contact_created: { type: 'system', title: 'Contact record created' },
 }
 
 function htmlToText(html: string) {
@@ -71,6 +108,90 @@ function htmlToText(html: string) {
     .replaceAll('&lt;', '<')
     .replaceAll('&gt;', '>')
     .trim()
+}
+
+function formLabel(formKey: string) {
+  if (formKey === 'retreat_registration_v1') return 'Retreat registration'
+  if (formKey === 'general_registration_v1') return 'General registration'
+  if (formKey === 'retreat_profile_optional_v1') return 'Optional profile'
+  if (formKey === 'register_interest') return 'Interest registration'
+  return 'Submission'
+}
+
+function statusLabel(status: string) {
+  return status.replaceAll('_', ' ')
+}
+
+function makeEventDetail(event: ContactEvent) {
+  if (event.note?.trim()) return event.note.trim()
+  if (!event.event_data || Object.keys(event.event_data).length === 0) return null
+
+  const labels: Record<string, string> = {
+    source: 'Source',
+    form_key: 'Form',
+    status: 'Status',
+    changed_fields: 'Changed fields',
+    message: 'Message',
+    to_email: 'Recipient',
+    subject: 'Subject',
+  }
+
+  return Object.entries(event.event_data)
+    .filter(([, value]) => value !== null && String(value).trim().length > 0)
+    .map(([key, value]) => `${labels[key] ?? key.replaceAll('_', ' ')}: ${String(value)}`)
+    .join(' • ')
+}
+
+function buildActivityItems(
+  contactId: string,
+  events: ContactEvent[],
+  emails: ContactEmail[],
+  submissions: ContactSubmission[]
+): ActivityItem[] {
+  const eventItems: ActivityItem[] = events
+    .filter((event) => !['email_sent', 'submission', 'submission_linked', 'submission_status_changed'].includes(event.event_type))
+    .map((event) => {
+      const config = EVENT_LABELS[event.event_type] ?? {
+        type: 'system' as const,
+        title: statusLabel(event.event_type),
+      }
+      return {
+        id: `event:${event.id}`,
+        kind: 'event',
+        type: config.type,
+        title: config.title,
+        subtitle: 'Contact activity',
+        detail: makeEventDetail(event),
+        createdAt: event.created_at,
+        href: `/dashboard/contacts/${contactId}?activity=event:${event.id}`,
+      }
+    })
+
+  const emailItems: ActivityItem[] = emails.map((email) => ({
+    id: `email:${email.id}`,
+    kind: 'email',
+    type: 'email',
+    title: email.subject,
+    subtitle: `Email sent to ${email.sent_to_email}`,
+    detail: `Provider: ${email.provider}`,
+    createdAt: email.sent_at,
+    href: `/dashboard/contacts/${contactId}/emails/${email.id}`,
+  }))
+
+  const submissionItems: ActivityItem[] = submissions.map((submission) => ({
+    id: `submission:${submission.id}`,
+    kind: 'submission',
+    type: 'submission',
+    title: formLabel(submission.form_key),
+    subtitle: `${statusLabel(submission.status)} • ${statusLabel(submission.review_status)}`,
+    detail: `Submission ${submission.id.slice(0, 8)}`,
+    createdAt: submission.created_at,
+    href: `/dashboard/submissions/${submission.id}`,
+  }))
+
+  return [...eventItems, ...emailItems, ...submissionItems].sort((a, b) =>
+    a.createdAt < b.createdAt ? 1 : -1
+  )
 }
 
 export default async function ContactDetailPage({
@@ -101,10 +222,40 @@ export default async function ContactDetailPage({
     { data: eventRows, error: eventsError },
     { data: emailRows, error: emailsError },
     { data: templateRows, error: templatesError },
+    { data: submissionRows, error: submissionsError },
   ] = await Promise.all([
     adminClient
       .from('contacts')
-      .select('id, first_name, last_name, email, source, status, created_at, updated_at')
+      .select(
+        [
+          'id',
+          'first_name',
+          'last_name',
+          'email',
+          'source',
+          'status',
+          'age_range',
+          'gender',
+          'gender_self_describe',
+          'runner_type',
+          'location_label',
+          'retreat_slug',
+          'retreat_name',
+          'budget_range',
+          'retreat_style_preference',
+          'duration_preference',
+          'travel_radius',
+          'accommodation_preference',
+          'community_vs_performance',
+          'preferred_season',
+          'gender_optional',
+          'life_stage_optional',
+          'what_would_make_it_great',
+          'profile_v2_updated_at',
+          'created_at',
+          'updated_at',
+        ].join(', ')
+      )
       .eq('id', id)
       .maybeSingle(),
     adminClient.from('contact_statuses').select('key, label').order('sort_order', { ascending: true }),
@@ -113,19 +264,25 @@ export default async function ContactDetailPage({
       .select('id, event_type, event_data, note, created_at')
       .eq('contact_id', id)
       .order('created_at', { ascending: false })
-      .limit(100),
+      .limit(200),
     adminClient
       .from('contact_emails')
-      .select('id, subject, sent_to_email, sent_at')
+      .select('id, subject, sent_to_email, sent_at, provider')
       .eq('contact_id', id)
       .eq('direction', 'outbound')
       .order('sent_at', { ascending: false })
-      .limit(30),
+      .limit(100),
     adminClient
       .from('email_templates')
       .select('key, name, status, subject, html_body, text_body')
       .eq('channel', 'email')
       .order('updated_at', { ascending: false })
+      .limit(100),
+    adminClient
+      .from('interest_submissions')
+      .select('id, form_key, status, review_status, created_at')
+      .eq('contact_id', id)
+      .order('created_at', { ascending: false })
       .limit(100),
   ])
 
@@ -136,17 +293,21 @@ export default async function ContactDetailPage({
   const events = ((eventsError ? [] : eventRows) ?? []) as ContactEvent[]
   const emails = ((emailsError ? [] : emailRows) ?? []) as ContactEmail[]
   const templates = ((templatesError ? [] : templateRows) ?? []) as EmailTemplate[]
+  const submissions = ((submissionsError ? [] : submissionRows) ?? []) as ContactSubmission[]
+
   const fullName = `${contact.first_name} ${contact.last_name}`
   const selectedTemplateKey = typeof query.template === 'string' ? query.template : ''
   const selectedTemplate =
     selectedTemplateKey.length > 0 ? templates.find((template) => template.key === selectedTemplateKey) : null
-  const variables = {
+
+  const templateVariables = {
     first_name: contact.first_name,
     last_name: contact.last_name,
     full_name: fullName,
     email: contact.email,
     source: contact.source ?? 'Website',
   }
+
   const renderedTemplate = selectedTemplate
     ? renderTemplate(
         {
@@ -154,13 +315,28 @@ export default async function ContactDetailPage({
           html: selectedTemplate.html_body,
           text: selectedTemplate.text_body,
         },
-        variables,
+        templateVariables,
         false
       )
     : null
+
   const defaultSubject = renderedTemplate?.subject ?? ''
-  const defaultMessage =
-    renderedTemplate?.text?.trim() || (renderedTemplate ? htmlToText(renderedTemplate.html) : '')
+  const defaultMessage = renderedTemplate?.text?.trim() || (renderedTemplate ? htmlToText(renderedTemplate.html) : '')
+
+  const allItems = buildActivityItems(contact.id, events, emails, submissions)
+  const feedFilter = typeof query.feed === 'string' ? query.feed : 'all'
+  const validFilter = ['all', 'email', 'submission', 'note', 'status', 'profile', 'system'].includes(feedFilter)
+    ? feedFilter
+    : 'all'
+
+  const filteredItems =
+    validFilter === 'all' ? allItems : allItems.filter((item) => item.type === validFilter)
+
+  const selectedActivity = typeof query.activity === 'string' ? query.activity : ''
+  const selectedItem = selectedActivity ? allItems.find((item) => item.id === selectedActivity) : null
+
+  const feedLink = (feed: string) =>
+    `/dashboard/contacts/${contact.id}?feed=${feed}${selectedItem ? `&activity=${selectedItem.id}` : ''}`
 
   return (
     <section>
@@ -169,134 +345,142 @@ export default async function ContactDetailPage({
           messages={{
             note: 'Note saved.',
             status: 'Status updated.',
-            email_sent: 'Email sent and logged to CRM.',
+            email_sent: 'Email sent and logged.',
           }}
           errorMessages={{
             invalid_email_fields: 'Subject and message are required.',
-            email_not_configured: 'Email sending is not configured in environment variables.',
-            email_send_failed: 'Could not send email. Check provider configuration and try again.',
-            email_log_failed: 'Email sent, but CRM logging failed. Please retry or check logs.',
+            email_not_configured: 'Email sending is not configured.',
+            email_send_failed: 'Could not send email. Check provider settings.',
+            email_log_failed: 'Email sent, but CRM logging failed.',
             contact_not_found: 'Could not find this contact record.',
           }}
         />
       </Suspense>
 
-      {/* Breadcrumb */}
-      <nav className="mb-5 flex items-center gap-1.5 text-sm text-zinc-500 dark:text-zinc-400">
-        <Link href="/dashboard/contacts" className="hover:text-zinc-900 dark:hover:text-zinc-200">
-          Contacts
-        </Link>
-        <ChevronRightIcon className="h-3.5 w-3.5 shrink-0" />
-        <span className="text-zinc-900 dark:text-zinc-50">{fullName}</span>
-      </nav>
-
-      {/* Contact header */}
-      <div className="mb-6 flex items-start gap-4">
-        <Avatar name={fullName} size="md" />
-        <div className="min-w-0">
-          <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">{fullName}</h1>
-          <div className="mt-1 flex flex-wrap items-center gap-3">
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <div className="mb-1 text-sm text-zinc-500 dark:text-zinc-400">
+            <Link href="/dashboard/contacts" className="hover:text-zinc-800 dark:hover:text-zinc-200">
+              Contacts
+            </Link>
+            <span className="mx-2">/</span>
+            <span>{fullName}</span>
+          </div>
+          <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">{fullName}</h1>
+          <div className="mt-1 flex flex-wrap items-center gap-2">
             <CopyEmail email={contact.email} />
             <StatusBadge status={contact.status} />
-            {contact.source && (
-              <span className="text-xs capitalize text-zinc-400">{contact.source}</span>
-            )}
+            {contact.source ? (
+              <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                {contact.source}
+              </span>
+            ) : null}
           </div>
         </div>
+        <Avatar name={fullName} size="md" />
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-3">
-        {/* Left column — details + update status + add note */}
-        <div className="space-y-5 lg:col-span-1">
-          {/* Details card */}
-          <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-              Details
-            </h2>
-            <dl className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <dt className="text-zinc-500 dark:text-zinc-400">Source</dt>
-                <dd className="capitalize text-zinc-900 dark:text-zinc-50">
-                  {contact.source ?? '—'}
-                </dd>
+      <div className="mb-5 grid gap-5 lg:grid-cols-3">
+        <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-2">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+            Profile snapshot
+          </h2>
+          <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+            {[
+              ['Age range', contact.age_range],
+              ['Gender', contact.gender],
+              ['Gender details', contact.gender_self_describe],
+              ['Runner type', contact.runner_type],
+              ['Location', contact.location_label],
+              ['Budget range', contact.budget_range],
+              ['Retreat style', contact.retreat_style_preference],
+              ['Duration preference', contact.duration_preference],
+              ['Travel radius', contact.travel_radius],
+              ['Accommodation', contact.accommodation_preference],
+              ['Community vs performance', contact.community_vs_performance],
+              ['Preferred season', contact.preferred_season],
+              ['Optional gender', contact.gender_optional],
+              ['Life stage', contact.life_stage_optional],
+            ].map(([label, value]) => (
+              <div key={label} className="rounded-lg bg-zinc-50 px-3 py-2 dark:bg-zinc-800/40">
+                <dt className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">{label}</dt>
+                <dd className="mt-1 text-zinc-800 dark:text-zinc-100">{value || '—'}</dd>
               </div>
-              <div className="flex justify-between text-sm">
-                <dt className="text-zinc-500 dark:text-zinc-400">Created</dt>
-                <dd className="text-zinc-900 dark:text-zinc-50">
-                  <RelativeTime date={contact.created_at} />
-                </dd>
-              </div>
-              <div className="flex justify-between text-sm">
-                <dt className="text-zinc-500 dark:text-zinc-400">Updated</dt>
-                <dd className="text-zinc-900 dark:text-zinc-50">
-                  <RelativeTime date={contact.updated_at} />
-                </dd>
-              </div>
-            </dl>
-          </div>
+            ))}
+          </dl>
+          {contact.what_would_make_it_great ? (
+            <div className="mt-3 rounded-lg bg-zinc-50 p-3 text-sm text-zinc-800 dark:bg-zinc-800/40 dark:text-zinc-100">
+              <p className="mb-1 text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">What would make it great</p>
+              <p>{contact.what_would_make_it_great}</p>
+            </div>
+          ) : null}
+          {contact.profile_v2_updated_at ? (
+            <p className="mt-3 text-xs text-zinc-500 dark:text-zinc-400">
+              Profile updated <RelativeTime date={contact.profile_v2_updated_at} />
+            </p>
+          ) : null}
+        </div>
 
-          {/* Update status */}
-          <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-              Status
-            </h2>
-            <form action={updateContactStatus} className="space-y-3">
+        <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+            Actions
+          </h2>
+
+          <details className="mb-2 rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
+            <summary className="cursor-pointer text-sm font-medium">Update status</summary>
+            <form action={updateContactStatus} className="mt-3 space-y-2">
               <input type="hidden" name="contact_id" value={contact.id} />
               <select
                 name="status"
                 defaultValue={contact.status}
-                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:ring-zinc-400"
+                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800"
               >
-                {statusOptions.map((s) => (
-                  <option key={s.key} value={s.key}>
-                    {s.label}
+                {statusOptions.map((status) => (
+                  <option key={status.key} value={status.key}>
+                    {status.label}
                   </option>
                 ))}
               </select>
               <button
                 type="submit"
-                className="w-full rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+                className="w-full rounded-full bg-zinc-900 px-3 py-2 text-sm font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
               >
                 Save status
               </button>
             </form>
-          </div>
+          </details>
 
-          {/* Add note */}
-          <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-              Add note
-            </h2>
-            <form action={addContactNote} className="space-y-3">
+          <details className="mb-2 rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
+            <summary className="cursor-pointer text-sm font-medium">Add note</summary>
+            <form action={addContactNote} className="mt-3 space-y-2">
               <input type="hidden" name="contact_id" value={contact.id} />
               <textarea
                 name="note"
-                rows={3}
+                rows={4}
                 required
-                placeholder="Write a note…"
-                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:ring-zinc-400"
+                placeholder="Write your note"
+                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800"
               />
               <button
                 type="submit"
-                className="w-full rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+                className="w-full rounded-full bg-zinc-900 px-3 py-2 text-sm font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
               >
                 Save note
               </button>
             </form>
-          </div>
+          </details>
 
-          {/* Send email */}
-          <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-              Send email
-            </h2>
-            <form method="get" className="mb-3 flex items-center gap-2">
+          <details className="rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
+            <summary className="cursor-pointer text-sm font-medium">Send email</summary>
+            <form method="get" className="mt-3 flex items-center gap-2">
+              <input type="hidden" name="feed" value={validFilter} />
+              {selectedItem ? <input type="hidden" name="activity" value={selectedItem.id} /> : null}
               <select
                 name="template"
                 defaultValue={selectedTemplateKey}
-                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:ring-zinc-400"
+                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800"
               >
-                <option value="">No template (write manually)</option>
+                <option value="">No template</option>
                 {templates.map((template) => (
                   <option key={template.key} value={template.key}>
                     {template.name} {template.status === 'draft' ? '(Draft)' : ''}
@@ -305,12 +489,13 @@ export default async function ContactDetailPage({
               </select>
               <button
                 type="submit"
-                className="shrink-0 rounded-full border border-zinc-300 px-3 py-2 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                className="rounded-full border border-zinc-300 px-3 py-2 text-xs font-medium dark:border-zinc-700"
               >
-                Apply template
+                Apply
               </button>
             </form>
-            <form action={sendContactEmail} className="space-y-3">
+
+            <form action={sendContactEmail} className="mt-3 space-y-2">
               <input type="hidden" name="contact_id" value={contact.id} />
               <input type="hidden" name="template_key" value={selectedTemplate?.key ?? ''} />
               <input
@@ -318,109 +503,121 @@ export default async function ContactDetailPage({
                 name="subject"
                 required
                 maxLength={180}
-                placeholder="Email subject"
                 defaultValue={defaultSubject}
-                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:ring-zinc-400"
+                placeholder="Email subject"
+                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800"
               />
               <textarea
                 name="message"
-                rows={7}
+                rows={6}
                 required
-                placeholder="Write your message..."
                 defaultValue={defaultMessage}
-                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:ring-zinc-400"
+                placeholder="Email message"
+                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800"
               />
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                Sends from your configured sender and logs in this contact’s timeline.
-              </p>
               <button
                 type="submit"
-                className="w-full rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+                className="w-full rounded-full bg-zinc-900 px-3 py-2 text-sm font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
               >
                 Send email
               </button>
             </form>
+          </details>
+        </div>
+      </div>
+
+      {selectedItem ? (
+        <div className="mb-4 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">{selectedItem.title}</p>
+              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{selectedItem.subtitle}</p>
+              {selectedItem.detail ? (
+                <p className="mt-2 text-sm text-zinc-700 dark:text-zinc-200">{selectedItem.detail}</p>
+              ) : null}
+            </div>
+            <Link
+              href={`/dashboard/contacts/${contact.id}?feed=${validFilter}`}
+              className="text-xs text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+            >
+              Clear selection
+            </Link>
           </div>
         </div>
+      ) : null}
 
-        {/* Right column — timeline */}
-        <div className="lg:col-span-2">
-          <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-              Timeline
-            </h2>
-            {events.length === 0 ? (
-              <p className="text-sm text-zinc-500 dark:text-zinc-400">No activity yet.</p>
-            ) : (
-              <div className="relative space-y-4">
-                {/* Vertical line */}
-                <div className="absolute left-2 top-2 bottom-2 w-px bg-zinc-200 dark:bg-zinc-700" />
+      <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          {[
+            ['all', 'All'],
+            ['email', 'Emails'],
+            ['submission', 'Submissions'],
+            ['note', 'Notes'],
+            ['status', 'Status'],
+            ['profile', 'Profile'],
+          ].map(([value, label]) => {
+            const active = validFilter === value
+            return (
+              <Link
+                key={value}
+                href={feedLink(value)}
+                className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+                  active
+                    ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900'
+                    : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700'
+                }`}
+              >
+                {label}
+              </Link>
+            )
+          })}
+        </div>
 
-                {events.map((event) => (
-                  <div key={event.id} className="relative flex gap-4 pl-7">
-                    {/* Dot on timeline */}
-                    <div className="absolute left-0 top-1.5 h-4 w-4 rounded-full border-2 border-white bg-zinc-300 dark:border-zinc-900 dark:bg-zinc-600" />
-
-                    <div className="min-w-0 flex-1 rounded-lg border border-zinc-100 bg-zinc-50 px-3 py-2.5 dark:border-zinc-800 dark:bg-zinc-800/50">
-                      <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5">
-                        <p className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
-                          {eventTypeLabel[event.event_type] ?? event.event_type}
-                        </p>
-                        <p className="text-xs text-zinc-400 dark:text-zinc-500">
-                          <RelativeTime date={event.created_at} />
-                        </p>
-                      </div>
-                      {event.note && (
-                        <p className="mt-1 text-sm text-zinc-700 dark:text-zinc-200">{event.note}</p>
-                      )}
-                      {event.event_data && Object.keys(event.event_data).length > 0 && (
-                        <dl className="mt-1.5 space-y-0.5">
-                          {Object.entries(event.event_data)
-                            .filter(([, v]) => v !== null)
-                            .map(([k, v]) => (
-                              <div key={k} className="flex gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
-                                <dt className="capitalize">{k.replace(/_/g, ' ')}:</dt>
-                                <dd>{v}</dd>
-                              </div>
-                            ))}
-                        </dl>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="mt-5 rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-              Email history
-            </h2>
-            {emails.length === 0 ? (
-              <p className="text-sm text-zinc-500 dark:text-zinc-400">No direct emails sent yet.</p>
-            ) : (
-              <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                {emails.map((email) => (
-                  <div key={email.id} className="py-3 first:pt-0 last:pb-0">
-                    <Link
-                      href={`/dashboard/contacts/${contact.id}/emails/${email.id}`}
-                      className="text-sm font-medium text-zinc-900 hover:text-zinc-700 dark:text-zinc-50 dark:hover:text-zinc-300"
-                    >
-                      {email.subject}
-                    </Link>
-                    <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
-                      <span>To {email.sent_to_email}</span>
-                      <span>•</span>
-                      <span>
-                        <RelativeTime date={email.sent_at} />
+        {filteredItems.length === 0 ? (
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">No activity for this filter.</p>
+        ) : (
+          <div className="space-y-2">
+            {filteredItems.map((item) => (
+              <Link
+                key={item.id}
+                href={item.href}
+                className="block rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-3 transition-colors hover:bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-800/40 dark:hover:bg-zinc-800"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+                          item.type === 'email'
+                            ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+                            : item.type === 'submission'
+                              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
+                              : item.type === 'note'
+                                ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
+                                : item.type === 'status'
+                                  ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300'
+                                  : item.type === 'profile'
+                                    ? 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300'
+                                    : 'bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200'
+                        }`}
+                      >
+                        {item.type}
                       </span>
+                      <p className="truncate text-sm font-medium text-zinc-900 dark:text-zinc-50">{item.title}</p>
                     </div>
+                    <p className="mt-1 truncate text-xs text-zinc-500 dark:text-zinc-400">{item.subtitle}</p>
+                    {item.detail ? (
+                      <p className="mt-1 line-clamp-2 text-xs text-zinc-600 dark:text-zinc-300">{item.detail}</p>
+                    ) : null}
                   </div>
-                ))}
-              </div>
-            )}
+                  <p className="shrink-0 text-xs text-zinc-500 dark:text-zinc-400">
+                    <RelativeTime date={item.createdAt} />
+                  </p>
+                </div>
+              </Link>
+            ))}
           </div>
-        </div>
+        )}
       </div>
     </section>
   )

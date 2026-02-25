@@ -1,41 +1,15 @@
 'use client'
 
-import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { ParallaxHero } from '@/components/site/parallax-hero'
 import { Reveal } from '@/components/site/reveal'
 import { Marquee } from '@/components/site/marquee'
+import { RegistrationForm } from '@/components/site/registration-form'
+import { trackSiteEvent } from '@/utils/analytics'
 
 export default function Home() {
-  const [submitted, setSubmitted] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submitError, setSubmitError] = useState<string | null>(null)
-
-  async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setSubmitError(null)
-    setIsSubmitting(true)
-    const form = e.currentTarget
-    const formData = new FormData(form)
-    try {
-      const response = await fetch('/api/register-interest', { method: 'POST', body: formData })
-      if (!response.ok) {
-        const payload = (await response.json().catch(() => null)) as { error?: string } | null
-        throw new Error(payload?.error ?? 'Unable to submit right now.')
-      }
-      setSubmitted(true)
-      form.reset()
-    } catch (error) {
-      setSubmitError(
-        error instanceof Error ? error.message : 'Something went wrong. Please try again.'
-      )
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
   return (
     <div className="bg-[#FAF8F4] text-stone-900">
       {/* ── HERO ──────────────────────────────────────────────────────────── */}
@@ -84,15 +58,17 @@ export default function Home() {
             >
               <Link
                 href="/retreats"
+                onClick={() => trackSiteEvent('cta_clicked', { cta_id: 'home_hero_view_retreats', page_type: 'home' })}
                 className="bg-[#FAF8F4] px-8 py-4 text-sm font-medium text-[#2C4A3E] transition-colors hover:bg-white"
               >
                 View Retreats
               </Link>
               <Link
-                href="/experience"
+                href="#register"
+                onClick={() => trackSiteEvent('cta_clicked', { cta_id: 'home_hero_join_list', page_type: 'home' })}
                 className="border border-white/60 px-8 py-4 text-sm font-medium text-white transition-colors hover:bg-white/10"
               >
-                The Experience
+                Join Retreat List
               </Link>
             </motion.div>
           </div>
@@ -251,7 +227,7 @@ export default function Home() {
             <div className="order-1 lg:order-2">
               <Reveal delay={0.1}>
                 <p className="mb-6 text-xs font-medium uppercase tracking-[0.2em] text-stone-400">
-                  Who It's For
+                  Who It&apos;s For
                 </p>
               </Reveal>
               <Reveal delay={0.2}>
@@ -350,134 +326,21 @@ export default function Home() {
                 Not near Sydney?
               </h2>
               <p className="text-lg leading-relaxed text-stone-600">
-                We're planning retreats in more locations. Tell us where you are and we'll reach
+                We&apos;re planning retreats in more locations. Tell us where you are and we&apos;ll reach
                 out when something near you is confirmed.
               </p>
             </div>
           </Reveal>
 
-          {submitted ? (
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mx-auto max-w-md py-16 text-center"
-            >
-              <p className="mb-4 font-serif text-3xl font-bold text-stone-900">Thank you.</p>
-              <p className="text-lg leading-relaxed text-stone-600">
-                We'll be in touch when something worth telling you about is ready.
-              </p>
-            </motion.div>
-          ) : (
-            <Reveal delay={0.1}>
-              <form onSubmit={handleSubmit} className="mx-auto max-w-lg space-y-5">
-                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                  <div>
-                    <label
-                      htmlFor="firstName"
-                      className="mb-2 block text-sm font-medium text-stone-700"
-                    >
-                      First Name
-                    </label>
-                    <input
-                      id="firstName"
-                      name="firstName"
-                      type="text"
-                      required
-                      className="w-full border border-stone-300 bg-white px-4 py-3 text-sm text-stone-900 transition-colors focus:border-[#2C4A3E] focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label
-                      htmlFor="lastName"
-                      className="mb-2 block text-sm font-medium text-stone-700"
-                    >
-                      Last Name
-                    </label>
-                    <input
-                      id="lastName"
-                      name="lastName"
-                      type="text"
-                      required
-                      className="w-full border border-stone-300 bg-white px-4 py-3 text-sm text-stone-900 transition-colors focus:border-[#2C4A3E] focus:outline-none"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label
-                    htmlFor="email"
-                    className="mb-2 block text-sm font-medium text-stone-700"
-                  >
-                    Email
-                  </label>
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    required
-                    autoComplete="email"
-                    className="w-full border border-stone-300 bg-white px-4 py-3 text-sm text-stone-900 transition-colors focus:border-[#2C4A3E] focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="source"
-                    className="mb-2 block text-sm font-medium text-stone-700"
-                  >
-                    How did you hear about us?
-                  </label>
-                  <div className="relative">
-                    <select
-                      id="source"
-                      name="source"
-                      className="w-full appearance-none border border-stone-300 bg-white px-4 py-3 text-sm text-stone-900 transition-colors focus:border-[#2C4A3E] focus:outline-none"
-                    >
-                      <option value="">Select an option</option>
-                      <option value="instagram">Instagram</option>
-                      <option value="friend">A friend or colleague</option>
-                      <option value="running-club">Running club</option>
-                      <option value="google">Google search</option>
-                      <option value="podcast">Podcast or newsletter</option>
-                      <option value="other">Other</option>
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center">
-                      <svg
-                        className="h-4 w-4 text-stone-500"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={1.5}
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M19 9l-7 7-7-7"
-                        />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="mt-3 w-full bg-[#2C4A3E] py-4 text-sm font-medium text-[#FAF8F4] transition-colors duration-200 hover:bg-[#1E3530] disabled:opacity-60"
-                >
-                  {isSubmitting ? 'Submitting…' : 'Register My Interest'}
-                </button>
-                {submitError && (
-                  <motion.p
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="text-center text-sm text-red-700"
-                  >
-                    {submitError}
-                  </motion.p>
-                )}
-                <p className="text-center text-xs text-stone-400">
-                  No spam. We'll only contact you with meaningful updates.
-                </p>
-              </form>
-            </Reveal>
-          )}
+          <Reveal delay={0.1}>
+            <div className="mx-auto max-w-xl bg-white p-8 md:p-10">
+              <RegistrationForm
+                mode="general"
+                source="site:homepage_register"
+                submitCtaLabel="Join Retreat List in 60 Seconds"
+              />
+            </div>
+          </Reveal>
         </div>
       </section>
     </div>

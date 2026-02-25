@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
+import { trackSiteEvent } from '@/utils/analytics'
 
 const NAV_LINKS = [
   { href: '/retreats', label: 'Retreats' },
@@ -32,13 +33,17 @@ export function SiteNav() {
     setMobileOpen(false)
   }, [pathname])
 
-  // Lock body scroll when mobile menu is open
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? 'hidden' : ''
-    return () => { document.body.style.overflow = '' }
+    return () => {
+      document.body.style.overflow = ''
+    }
   }, [mobileOpen])
 
   const dark = scrolled || mobileOpen
+  const isRetreatDetail = pathname.startsWith('/retreats/')
+  const primaryCtaHref = isRetreatDetail ? '#register' : '/#register'
+  const primaryCtaLabel = isRetreatDetail ? 'Apply for This Retreat' : 'Join Retreat List'
 
   return (
     <>
@@ -57,7 +62,6 @@ export function SiteNav() {
             Miles Between
           </Link>
 
-          {/* Desktop links */}
           <div className="hidden items-center gap-8 md:flex">
             {NAV_LINKS.map((link) => (
               <Link
@@ -78,18 +82,23 @@ export function SiteNav() {
               </Link>
             ))}
             <Link
-              href="/retreats/sydney-southern-highlands#register"
+              href={primaryCtaHref}
+              onClick={() =>
+                trackSiteEvent('cta_clicked', {
+                  cta_id: 'site_nav_primary',
+                  page_type: isRetreatDetail ? 'retreat' : 'site',
+                })
+              }
               className={`rounded-full border px-5 py-2.5 text-sm font-medium transition-all duration-300 ${
                 dark
                   ? 'border-[#FAF8F4]/60 text-[#FAF8F4] hover:bg-[#FAF8F4] hover:text-[#2C4A3E]'
                   : 'border-white/80 text-white hover:bg-white hover:text-stone-900'
               }`}
             >
-              Register Interest
+              {primaryCtaLabel}
             </Link>
           </div>
 
-          {/* Mobile hamburger */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
@@ -120,7 +129,6 @@ export function SiteNav() {
         </div>
       </nav>
 
-      {/* Full-screen mobile overlay */}
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
@@ -159,10 +167,17 @@ export function SiteNav() {
                 className="mt-8"
               >
                 <Link
-                  href="/retreats/sydney-southern-highlands#register"
+                  href={primaryCtaHref}
+                  onClick={() => {
+                    setMobileOpen(false)
+                    trackSiteEvent('cta_clicked', {
+                      cta_id: 'site_nav_mobile_primary',
+                      page_type: isRetreatDetail ? 'retreat' : 'site',
+                    })
+                  }}
                   className="inline-block rounded-full border border-[#FAF8F4]/60 px-7 py-3.5 text-sm font-medium text-[#FAF8F4] transition-colors hover:bg-[#FAF8F4] hover:text-[#2C4A3E]"
                 >
-                  Register Interest
+                  {primaryCtaLabel}
                 </Link>
               </motion.div>
             </div>

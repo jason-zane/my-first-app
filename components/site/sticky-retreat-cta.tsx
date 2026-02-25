@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { Retreat } from '@/lib/retreats'
+import { trackSiteEvent } from '@/utils/analytics'
 
 export function StickyRetreatCta({ retreat }: { retreat: Retreat }) {
   const [visible, setVisible] = useState(false)
@@ -31,9 +32,16 @@ export function StickyRetreatCta({ retreat }: { retreat: Retreat }) {
           </div>
           <a
             href="#register"
+            onClick={() =>
+              trackSiteEvent('cta_clicked', {
+                cta_id: 'sticky_retreat_apply',
+                page_type: 'retreat',
+                retreat_slug: retreat.slug,
+              })
+            }
             className="shrink-0 bg-[#FAF8F4] px-6 py-3 text-sm font-medium text-[#2C4A3E] transition-colors hover:bg-white"
           >
-            Register Interest
+            Apply for This Retreat
           </a>
         </motion.div>
       )}

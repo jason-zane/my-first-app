@@ -9,6 +9,7 @@ import {
   linkSubmissionToContact,
 } from '@/utils/services/submissions'
 import { createContactEvent, upsertContactByEmail } from '@/utils/services/contacts'
+import { syncContactProfileFromSubmission } from '@/utils/services/contact-profile-sync'
 
 const resendApiKey = process.env.RESEND_API_KEY
 const fromEmail = process.env.RESEND_FROM_EMAIL
@@ -186,6 +187,30 @@ export async function POST(request: Request) {
               form_key: formKey,
             },
           })
+
+          const profileSync = await syncContactProfileFromSubmission(adminClient, {
+            contactId,
+            formKey,
+            submissionId,
+            answers,
+          })
+
+          if (profileSync.error) {
+            await createSubmissionEvent(adminClient, {
+              submissionId,
+              eventType: 'profile_sync_failed',
+              eventData: { form_key: formKey, message: profileSync.error },
+            })
+          } else if (profileSync.changedFields.length > 0) {
+            await createSubmissionEvent(adminClient, {
+              submissionId,
+              eventType: 'contact_profile_synced',
+              eventData: {
+                form_key: formKey,
+                changed_fields: profileSync.changedFields.join(', '),
+              },
+            })
+          }
         } else if (contactResult.error) {
           console.error('contact upsert failed:', contactResult.error)
         }

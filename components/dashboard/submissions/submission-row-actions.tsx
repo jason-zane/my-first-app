@@ -1,7 +1,6 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import Link from 'next/link'
 import * as Dialog from '@radix-ui/react-dialog'
 import { ActionMenu } from '@/components/ui/action-menu'
 import { updateSubmissionStatus, linkSubmissionContact } from '@/app/dashboard/submissions/actions'
@@ -40,6 +39,13 @@ export function SubmissionRowActions({
       label: 'Change status',
       onSelect: () => setOpenDialog('change-status'),
     },
+    {
+      type: 'item' as const,
+      label: 'Open details',
+      onSelect: () => {
+        window.location.href = `/dashboard/submissions/${submissionId}`
+      },
+    },
     { type: 'separator' as const },
     ...(contactId
       ? [
@@ -67,6 +73,7 @@ export function SubmissionRowActions({
       {/* Hidden form for link/create contact */}
       <form ref={linkFormRef} action={linkSubmissionContact} className="hidden">
         <input type="hidden" name="submission_id" value={submissionId} />
+        <input type="hidden" name="redirect_to" value="/dashboard/submissions" />
         <input type="hidden" name="first_name" value={firstName} />
         <input type="hidden" name="last_name" value={lastName} />
         <input type="hidden" name="email" value={email} />
@@ -95,6 +102,7 @@ export function SubmissionRowActions({
             >
               <input type="hidden" name="submission_id" value={submissionId} />
               <input type="hidden" name="contact_id" value={contactId ?? ''} />
+              <input type="hidden" name="redirect_to" value="/dashboard/submissions" />
               <div className="space-y-1.5">
                 {submissionStatuses.map((status) => (
                   <label

@@ -127,7 +127,7 @@ export default function RetreatsPage() {
                 href="/#register"
                 className="inline-block border border-[#FAF8F4]/60 px-8 py-4 text-sm font-medium text-[#FAF8F4] transition-colors hover:bg-[#FAF8F4] hover:text-[#2C4A3E]"
               >
-                Register General Interest
+                Join General Retreat List
               </Link>
             </div>
           </Reveal>
