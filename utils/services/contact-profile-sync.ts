@@ -82,7 +82,7 @@ export async function syncContactProfileFromSubmission(
     return { changedFields: [], error: currentError?.message ?? 'contact_not_found' }
   }
 
-  const current = currentData as Record<string, string | null>
+  const current = currentData as unknown as Record<string, string | null>
   const changedFields: string[] = []
   const updates: Record<string, string> = {}
 

@@ -288,7 +288,7 @@ export default async function ContactDetailPage({
 
   if (contactError || !contactRow) notFound()
 
-  const contact = contactRow as Contact
+  const contact = contactRow as unknown as Contact
   const statusOptions = (statuses ?? []) as ContactStatus[]
   const events = ((eventsError ? [] : eventRows) ?? []) as ContactEvent[]
   const emails = ((emailsError ? [] : emailRows) ?? []) as ContactEmail[]
