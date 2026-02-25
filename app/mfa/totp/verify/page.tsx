@@ -1,11 +1,19 @@
 'use client'
 
-import { FormEvent, useEffect, useMemo, useState } from 'react'
+import { Suspense, FormEvent, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
 
 export default function TotpVerifyPage() {
+  return (
+    <Suspense>
+      <TotpVerifyPageContent />
+    </Suspense>
+  )
+}
+
+function TotpVerifyPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const supabase = useMemo(() => createClient(), [])

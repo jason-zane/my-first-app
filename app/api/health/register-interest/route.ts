@@ -20,11 +20,8 @@ function envCheck(value: string | undefined, required = true): CheckResult {
   }
 }
 
-async function checkTable(
-  supabase: ReturnType<typeof createClient>,
-  tableName: string,
-  columnName: string
-): Promise<CheckResult> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function checkTable(supabase: any, tableName: string, columnName: string): Promise<CheckResult> {
   const { error } = await supabase.from(tableName).select(columnName, { count: 'exact', head: true })
 
   if (!error) {

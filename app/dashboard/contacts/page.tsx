@@ -1,5 +1,12 @@
+import { Suspense } from 'react'
 import Link from 'next/link'
 import { createAdminClient } from '@/utils/supabase/admin'
+import { Badge, StatusBadge } from '@/components/ui/badge'
+import { Avatar } from '@/components/ui/avatar'
+import { CopyEmail } from '@/components/ui/copy-email'
+import { RelativeTime } from '@/components/ui/relative-time'
+import { ActionFeedback } from '@/components/ui/action-feedback'
+import { ChevronRightIcon } from '@/components/icons'
 
 type Contact = {
   id: string
@@ -29,10 +36,12 @@ export default async function ContactsPage({
   let statusOptions: string[] = []
   let sourceOptions: string[] = []
   let loadError: string | null = null
+
   const q =
     typeof params.q === 'string' ? params.q.trim().replaceAll(',', ' ').replaceAll('%', '') : ''
   const statusFilter = typeof params.status === 'string' ? params.status : 'all'
   const sourceFilter = typeof params.source === 'string' ? params.source : 'all'
+  const hasFilters = q || statusFilter !== 'all' || sourceFilter !== 'all'
 
   if (!adminClient) {
     loadError = 'Missing SUPABASE_SERVICE_ROLE_KEY in environment.'
@@ -43,12 +52,8 @@ export default async function ContactsPage({
       .order('created_at', { ascending: false })
       .limit(200)
 
-    if (statusFilter !== 'all') {
-      contactQuery = contactQuery.eq('status', statusFilter)
-    }
-    if (sourceFilter !== 'all') {
-      contactQuery = contactQuery.eq('source', sourceFilter)
-    }
+    if (statusFilter !== 'all') contactQuery = contactQuery.eq('status', statusFilter)
+    if (sourceFilter !== 'all') contactQuery = contactQuery.eq('source', sourceFilter)
     if (q) {
       contactQuery = contactQuery.or(
         `first_name.ilike.%${q}%,last_name.ilike.%${q}%,email.ilike.%${q}%`
@@ -80,15 +85,15 @@ export default async function ContactsPage({
       const events = (eventRows ?? []) as ContactEvent[]
       eventsByContactId = new Map(
         events
-          .filter((event) => event.contact_id)
-          .map((event) => [event.contact_id, event.created_at])
+          .filter((e) => e.contact_id)
+          .map((e) => [e.contact_id, e.created_at])
       )
-      statusOptions = ((statusesRows ?? []) as Array<{ key: string }>).map((row) => row.key)
+      statusOptions = ((statusesRows ?? []) as Array<{ key: string }>).map((r) => r.key)
       sourceOptions = Array.from(
         new Set(
           ((allContactsRows ?? []) as Array<{ source: string | null }>)
-            .map((row) => row.source)
-            .filter((value): value is string => Boolean(value))
+            .map((r) => r.source)
+            .filter((v): v is string => Boolean(v))
         )
       ).sort((a, b) => a.localeCompare(b))
     }
@@ -96,111 +101,150 @@ export default async function ContactsPage({
 
   return (
     <section>
-      <h1 className="mb-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">Contacts</h1>
-      <p className="mb-6 text-sm text-zinc-500 dark:text-zinc-400">
-        CRM contacts created from interest submissions.
-      </p>
+      <Suspense>
+        <ActionFeedback messages={{}} />
+      </Suspense>
 
-      <form className="mb-6 grid gap-3 rounded-lg border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 md:grid-cols-4">
+      {/* Header */}
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">Contacts</h1>
+          <p className="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400">
+            CRM records linked from interest submissions.
+          </p>
+        </div>
+        {contacts.length > 0 && (
+          <span className="mt-1 rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+            {contacts.length}{hasFilters ? ' shown' : ' total'}
+          </span>
+        )}
+      </div>
+
+      {/* Filter toolbar */}
+      <form className="mb-5 flex flex-wrap items-center gap-2">
         <input
           type="text"
           name="q"
           defaultValue={q}
-          placeholder="Search name or email"
-          className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:ring-zinc-400"
+          placeholder="Search name or email…"
+          className="h-9 min-w-48 rounded-lg border border-zinc-300 px-3 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:ring-zinc-400"
         />
         <select
           name="status"
           defaultValue={statusFilter}
-          className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:ring-zinc-400"
+          className="h-9 rounded-lg border border-zinc-300 px-3 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:ring-zinc-400"
         >
-          <option value="all">All Statuses</option>
-          {statusOptions.map((status) => (
-            <option key={status} value={status}>
-              {status}
-            </option>
+          <option value="all">All statuses</option>
+          {statusOptions.map((s) => (
+            <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>
           ))}
         </select>
         <select
           name="source"
           defaultValue={sourceFilter}
-          className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:ring-zinc-400"
+          className="h-9 rounded-lg border border-zinc-300 px-3 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:ring-zinc-400"
         >
-          <option value="all">All Sources</option>
-          {sourceOptions.map((source) => (
-            <option key={source} value={source}>
-              {source}
-            </option>
+          <option value="all">All sources</option>
+          {sourceOptions.map((s) => (
+            <option key={s} value={s}>{s}</option>
           ))}
         </select>
-        <div className="flex gap-2">
-          <button
-            type="submit"
-            className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
-          >
-            Apply
-          </button>
+        <button
+          type="submit"
+          className="h-9 rounded-lg bg-zinc-900 px-4 text-sm font-medium text-white transition-colors hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+        >
+          Apply
+        </button>
+        {hasFilters && (
           <Link
             href="/dashboard/contacts"
-            className="rounded-full border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-50 dark:hover:bg-zinc-800"
+            className="h-9 flex items-center rounded-lg border border-zinc-300 px-3 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800"
           >
-            Reset
+            Clear
           </Link>
-        </div>
+        )}
       </form>
 
       {loadError ? (
-        <p className="mb-6 rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-300">
+        <p className="mb-6 rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-300">
           Could not load contacts: {loadError}
         </p>
       ) : null}
 
-      <div className="overflow-x-auto rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+      <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
         <table className="min-w-full text-left text-sm">
-          <thead className="bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-            <tr>
-              <th className="px-4 py-3 font-medium">Name</th>
-              <th className="px-4 py-3 font-medium">Email</th>
-              <th className="px-4 py-3 font-medium">Source</th>
-              <th className="px-4 py-3 font-medium">Status</th>
-              <th className="px-4 py-3 font-medium">Created</th>
-              <th className="px-4 py-3 font-medium">Last Activity</th>
+          <thead>
+            <tr className="border-b border-zinc-200 dark:border-zinc-800">
+              <th className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                Contact
+              </th>
+              <th className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                Email
+              </th>
+              <th className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                Status
+              </th>
+              <th className="hidden px-4 py-3 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400 sm:table-cell">
+                Source
+              </th>
+              <th className="hidden px-4 py-3 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400 lg:table-cell">
+                Last activity
+              </th>
+              <th className="px-4 py-3" />
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
             {contacts.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-zinc-500 dark:text-zinc-400">
-                  No contacts yet.
+                <td colSpan={6} className="px-4 py-10 text-center text-sm text-zinc-500 dark:text-zinc-400">
+                  {hasFilters ? 'No contacts match your filters.' : 'No contacts yet. They are created when submissions are linked.'}
                 </td>
               </tr>
             ) : (
-              contacts.map((contact) => (
-                <tr
-                  key={contact.id}
-                  className="border-t border-zinc-200 text-zinc-800 dark:border-zinc-800 dark:text-zinc-200"
-                >
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    <Link
-                      href={`/dashboard/contacts/${contact.id}`}
-                      className="font-medium text-zinc-900 underline-offset-4 hover:underline dark:text-zinc-50"
-                    >
-                      {contact.first_name} {contact.last_name}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3">{contact.email}</td>
-                  <td className="px-4 py-3">{contact.source ?? 'N/A'}</td>
-                  <td className="px-4 py-3">{contact.status}</td>
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    {new Date(contact.created_at).toLocaleString()}
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    {eventsByContactId.get(contact.id)
-                      ? new Date(eventsByContactId.get(contact.id)!).toLocaleString()
-                      : new Date(contact.updated_at).toLocaleString()}
-                  </td>
-                </tr>
-              ))
+              contacts.map((contact) => {
+                const fullName = `${contact.first_name} ${contact.last_name}`
+                const lastActivity = eventsByContactId.get(contact.id) ?? contact.updated_at
+
+                return (
+                  <tr
+                    key={contact.id}
+                    className="group transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/40"
+                  >
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2.5">
+                        <Avatar name={fullName} />
+                        <Link
+                          href={`/dashboard/contacts/${contact.id}`}
+                          className="font-medium text-zinc-900 hover:text-zinc-700 dark:text-zinc-50 dark:hover:text-zinc-300"
+                        >
+                          {fullName}
+                        </Link>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <CopyEmail email={contact.email} />
+                    </td>
+                    <td className="px-4 py-3">
+                      <StatusBadge status={contact.status} />
+                    </td>
+                    <td className="hidden px-4 py-3 text-zinc-500 capitalize dark:text-zinc-400 sm:table-cell">
+                      {contact.source ?? '—'}
+                    </td>
+                    <td className="hidden px-4 py-3 text-zinc-500 dark:text-zinc-400 lg:table-cell">
+                      <RelativeTime date={lastActivity} />
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <Link
+                        href={`/dashboard/contacts/${contact.id}`}
+                        className="text-zinc-400 transition-colors group-hover:text-zinc-700 dark:group-hover:text-zinc-300"
+                        aria-label={`View ${fullName}`}
+                      >
+                        <ChevronRightIcon className="h-4 w-4" />
+                      </Link>
+                    </td>
+                  </tr>
+                )
+              })
             )}
           </tbody>
         </table>

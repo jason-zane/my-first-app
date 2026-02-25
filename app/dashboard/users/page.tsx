@@ -1,11 +1,13 @@
+import { Suspense } from 'react'
 import { createAdminClient } from '@/utils/supabase/admin'
-import {
-  inviteUser,
-  resetUserMfa,
-  removeUser,
-  sendPasswordResetEmail,
-  updateUserRole,
-} from '@/app/dashboard/users/actions'
+import { createClient } from '@/utils/supabase/server'
+import { Badge } from '@/components/ui/badge'
+import { Avatar } from '@/components/ui/avatar'
+import { CopyEmail } from '@/components/ui/copy-email'
+import { RelativeTime } from '@/components/ui/relative-time'
+import { ActionFeedback } from '@/components/ui/action-feedback'
+import { InviteUserDialog } from '@/components/dashboard/users/invite-user-dialog'
+import { UserRowActions } from '@/components/dashboard/users/user-row-actions'
 
 type ProfileRow = {
   user_id: string
@@ -19,16 +21,32 @@ type AuthUser = {
   last_sign_in_at?: string | null
 }
 
+const feedbackMessages: Record<string, string> = {
+  '1': 'Role updated.',
+  invited_set_sent: 'Invite sent — they will receive an email to set their password.',
+  password_reset_sent: 'Password reset email sent.',
+  removed: 'User removed.',
+  role_only: 'User already exists — role updated.',
+  mfa_reset: 'MFA reset. They will re-enrol on next login.',
+}
+
 export default async function UsersPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
-  const params = await searchParams
+  await searchParams
+
   const adminClient = createAdminClient()
+  const supabase = await createClient()
   let users: AuthUser[] = []
   let rolesByUserId = new Map<string, 'admin' | 'staff'>()
+  let mfaEnrolledUserIds = new Set<string>()
   let loadError: string | null = null
+
+  const {
+    data: { user: currentUser },
+  } = await supabase.auth.getUser()
 
   if (!adminClient) {
     loadError = 'Missing SUPABASE_SERVICE_ROLE_KEY in environment.'
@@ -46,174 +64,140 @@ export default async function UsersPage({
     } else {
       users = (usersResult.users ?? []) as AuthUser[]
       rolesByUserId = new Map(
-        ((profiles ?? []) as ProfileRow[]).map((profile) => [profile.user_id, profile.role])
+        ((profiles ?? []) as ProfileRow[]).map((p) => [p.user_id, p.role])
       )
+
+      // Best-effort: fetch all MFA factors to show enrollment status
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+      const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+      if (supabaseUrl && serviceKey) {
+        try {
+          const res = await fetch(`${supabaseUrl}/auth/v1/admin/factors`, {
+            headers: {
+              Authorization: `Bearer ${serviceKey}`,
+              apikey: serviceKey,
+            },
+          })
+          if (res.ok) {
+            const factors = (await res.json()) as Array<{
+              user_id: string
+              status: string
+              factor_type: string
+            }>
+            for (const factor of factors) {
+              if (factor.factor_type === 'totp' && factor.status === 'verified') {
+                mfaEnrolledUserIds.add(factor.user_id)
+              }
+            }
+          }
+        } catch {
+          // MFA status unavailable — degrade gracefully
+        }
+      }
     }
   }
 
-  const saved = params.saved === '1'
-  const savedCode = typeof params.saved === 'string' ? params.saved : null
-  const errorCode = typeof params.error === 'string' ? params.error : null
-
   return (
     <section>
-      <h1 className="mb-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">Users</h1>
-      <p className="mb-6 text-sm text-zinc-500 dark:text-zinc-400">
-        Manage backend users, roles, and login emails.
-      </p>
+      <Suspense>
+        <ActionFeedback messages={feedbackMessages} />
+      </Suspense>
 
-      {saved || savedCode ? (
-        <p className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300">
-          {savedCode === 'invited'
-            ? 'User invited and email sent.'
-            : savedCode === 'invited_set_sent'
-              ? 'User created and password setup email sent.'
-            : savedCode === 'password_reset_sent'
-              ? 'Password reset email sent.'
-              : savedCode === 'mfa_reset'
-                ? 'MFA reset. User must re-enroll on next login.'
-                : savedCode === 'removed'
-                  ? 'User removed.'
-                  : savedCode === 'role_only'
-                    ? 'User already exists; role updated.'
-                  : 'User role updated.'}
-        </p>
-      ) : null}
-
-      {errorCode ? (
-        <p className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-300">
-          {errorCode === 'invite_email_failed'
-            ? 'Could not send invite email. Please check Auth email settings and try again.'
-            : errorCode === 'invite_redirect_not_allowed'
-              ? 'Invite redirect URL is not allowed. Add /set-password URL in Supabase Auth URL Configuration.'
-              : errorCode === 'invite_email_provider_failed'
-                ? 'Supabase could not send email. Check Auth email provider settings and sender configuration.'
-            : errorCode === 'mfa_reset_failed'
-              ? 'Could not reset MFA factors for this user.'
-              : 'Could not complete user action.'}
-        </p>
-      ) : null}
-
-      <form
-        action={inviteUser}
-        className="mb-6 grid gap-3 rounded-lg border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 md:grid-cols-4"
-      >
-        <input
-          type="email"
-          name="email"
-          placeholder="new.user@example.com"
-          className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:ring-zinc-400"
-          required
-        />
-        <select
-          name="role"
-          defaultValue="staff"
-          className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:ring-zinc-400"
-        >
-          <option value="staff">staff</option>
-          <option value="admin">admin</option>
-        </select>
-        <div className="md:col-span-2">
-          <button
-            type="submit"
-            className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
-          >
-            Invite User (Send Password Setup Email)
-          </button>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">Users</h1>
+          <p className="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400">
+            Manage backend access, roles, and authentication.
+          </p>
         </div>
-      </form>
+        <InviteUserDialog />
+      </div>
 
       {loadError ? (
-        <p className="mb-6 rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-300">
+        <p className="mb-6 rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-300">
           Could not load users: {loadError}
         </p>
       ) : null}
 
-      <div className="overflow-x-auto rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+      <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
         <table className="min-w-full text-left text-sm">
-          <thead className="bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-            <tr>
-              <th className="px-4 py-3 font-medium">Email</th>
-              <th className="px-4 py-3 font-medium">Role</th>
-              <th className="px-4 py-3 font-medium">Created</th>
-              <th className="px-4 py-3 font-medium">Last Sign In</th>
-              <th className="px-4 py-3 font-medium">Actions</th>
+          <thead>
+            <tr className="border-b border-zinc-200 dark:border-zinc-800">
+              <th className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                User
+              </th>
+              <th className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                Role
+              </th>
+              <th className="hidden px-4 py-3 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400 sm:table-cell">
+                MFA
+              </th>
+              <th className="hidden px-4 py-3 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400 lg:table-cell">
+                Last active
+              </th>
+              <th className="px-4 py-3" />
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
             {users.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-zinc-500 dark:text-zinc-400">
-                  No users found.
+                <td colSpan={5} className="px-4 py-10 text-center text-sm text-zinc-500 dark:text-zinc-400">
+                  No users yet. Invite the first user to get started.
                 </td>
               </tr>
             ) : (
               users.map((user) => {
-                const currentRole = rolesByUserId.get(user.id) ?? 'staff'
+                const role = rolesByUserId.get(user.id) ?? 'staff'
+                const mfaEnrolled = mfaEnrolledUserIds.size > 0
+                  ? mfaEnrolledUserIds.has(user.id)
+                  : null
+                const isSelf = user.id === currentUser?.id
+                const displayEmail = user.email ?? 'Unknown'
+
                 return (
                   <tr
                     key={user.id}
-                    className="border-t border-zinc-200 text-zinc-800 dark:border-zinc-800 dark:text-zinc-200"
+                    className="transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/40"
                   >
-                    <td className="px-4 py-3">{user.email ?? 'No email'}</td>
-                    <td className="px-4 py-3">{currentRole}</td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      {user.created_at ? new Date(user.created_at).toLocaleString() : 'N/A'}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      {user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString() : 'N/A'}
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2.5">
+                        <Avatar name={displayEmail} />
+                        <div className="min-w-0">
+                          <CopyEmail email={displayEmail} />
+                          {isSelf && (
+                            <p className="text-xs text-zinc-400 dark:text-zinc-500">You</p>
+                          )}
+                        </div>
+                      </div>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <form action={updateUserRole} className="flex items-center gap-2">
-                          <input type="hidden" name="user_id" value={user.id} />
-                          <select
-                            name="role"
-                            defaultValue={currentRole}
-                            className="rounded-md border border-zinc-300 px-2 py-1 text-xs text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:ring-zinc-400"
-                          >
-                            <option value="staff">staff</option>
-                            <option value="admin">admin</option>
-                          </select>
-                          <button
-                            type="submit"
-                            className="rounded-full border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-900 transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-50 dark:hover:bg-zinc-800"
-                          >
-                            Save Role
-                          </button>
-                        </form>
-
-                        <form action={sendPasswordResetEmail}>
-                          <input type="hidden" name="email" value={user.email ?? ''} />
-                          <button
-                            type="submit"
-                            className="rounded-full border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-900 transition-colors hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-50 dark:hover:bg-zinc-800"
-                            disabled={!user.email}
-                          >
-                            Send Password Reset
-                          </button>
-                        </form>
-
-                        <form action={resetUserMfa}>
-                          <input type="hidden" name="user_id" value={user.id} />
-                          <button
-                            type="submit"
-                            className="rounded-full border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-900 transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-50 dark:hover:bg-zinc-800"
-                          >
-                            Reset MFA
-                          </button>
-                        </form>
-
-                        <form action={removeUser}>
-                          <input type="hidden" name="user_id" value={user.id} />
-                          <button
-                            type="submit"
-                            className="rounded-full border border-red-300 px-3 py-1.5 text-xs font-medium text-red-700 transition-colors hover:bg-red-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-900/20"
-                          >
-                            Remove
-                          </button>
-                        </form>
-                      </div>
+                      <Badge variant={role}>{role}</Badge>
+                    </td>
+                    <td className="hidden px-4 py-3 sm:table-cell">
+                      {mfaEnrolled === null ? (
+                        <span className="text-xs text-zinc-400">—</span>
+                      ) : mfaEnrolled ? (
+                        <Badge variant="enrolled">Enrolled</Badge>
+                      ) : (
+                        <Badge variant="warning">Not set</Badge>
+                      )}
+                    </td>
+                    <td className="hidden px-4 py-3 lg:table-cell">
+                      <span className="text-zinc-500 dark:text-zinc-400">
+                        {user.last_sign_in_at ? (
+                          <RelativeTime date={user.last_sign_in_at} />
+                        ) : (
+                          'Never'
+                        )}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <UserRowActions
+                        userId={user.id}
+                        email={user.email ?? ''}
+                        currentRole={role}
+                        isSelf={isSelf}
+                      />
                     </td>
                   </tr>
                 )

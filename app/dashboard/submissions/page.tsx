@@ -1,6 +1,12 @@
+import { Suspense } from 'react'
 import Link from 'next/link'
 import { createAdminClient } from '@/utils/supabase/admin'
-import { linkSubmissionContact, updateSubmissionStatus } from '@/app/dashboard/submissions/actions'
+import { StatusBadge } from '@/components/ui/badge'
+import { Avatar } from '@/components/ui/avatar'
+import { CopyEmail } from '@/components/ui/copy-email'
+import { RelativeTime } from '@/components/ui/relative-time'
+import { ActionFeedback } from '@/components/ui/action-feedback'
+import { SubmissionRowActions } from '@/components/dashboard/submissions/submission-row-actions'
 
 type InterestSubmission = {
   id: string
@@ -13,7 +19,10 @@ type InterestSubmission = {
   contact_id: string | null
 }
 
-const submissionStatuses = ['new', 'reviewed', 'qualified', 'closed']
+const feedbackMessages: Record<string, string> = {
+  linked: 'Contact created and linked.',
+  status: 'Status updated.',
+}
 
 export default async function SubmissionsPage({
   searchParams,
@@ -27,6 +36,7 @@ export default async function SubmissionsPage({
     typeof params.q === 'string' ? params.q.trim().replaceAll(',', ' ').replaceAll('%', '') : ''
   const statusFilter = typeof params.status === 'string' ? params.status : 'all'
   const sourceFilter = typeof params.source === 'string' ? params.source : 'all'
+  const hasFilters = q || statusFilter !== 'all' || sourceFilter !== 'all'
 
   let submissions: InterestSubmission[] = []
   let sourceOptions: string[] = []
@@ -34,6 +44,8 @@ export default async function SubmissionsPage({
   let totalCount = 0
   let newCount = 0
   let linkedCount = 0
+
+  const submissionStatuses = ['new', 'reviewed', 'qualified', 'closed']
 
   if (!adminClient) {
     loadError = 'Missing SUPABASE_SERVICE_ROLE_KEY in environment.'
@@ -44,12 +56,8 @@ export default async function SubmissionsPage({
       .order('created_at', { ascending: false })
       .limit(100)
 
-    if (statusFilter !== 'all') {
-      query = query.eq('status', statusFilter)
-    }
-    if (sourceFilter !== 'all') {
-      query = query.eq('source', sourceFilter)
-    }
+    if (statusFilter !== 'all') query = query.eq('status', statusFilter)
+    if (sourceFilter !== 'all') query = query.eq('source', sourceFilter)
     if (q) {
       query = query.or(`first_name.ilike.%${q}%,last_name.ilike.%${q}%,email.ilike.%${q}%`)
     }
@@ -84,186 +92,174 @@ export default async function SubmissionsPage({
       sourceOptions = Array.from(
         new Set(
           ((allSourcesRows ?? []) as Array<{ source: string | null }>)
-            .map((row) => row.source)
-            .filter((value): value is string => Boolean(value))
+            .map((r) => r.source)
+            .filter((v): v is string => Boolean(v))
         )
       ).sort((a, b) => a.localeCompare(b))
     }
   }
 
-  const saved = typeof params.saved === 'string' ? params.saved : null
-  const hasError = typeof params.error === 'string'
-
   return (
     <section>
-      <h1 className="mb-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">Submissions</h1>
-      <p className="mb-6 text-sm text-zinc-500 dark:text-zinc-400">
-        Latest interest form submissions.
-      </p>
+      <Suspense>
+        <ActionFeedback messages={feedbackMessages} />
+      </Suspense>
 
-      <div className="mb-6 grid gap-4 sm:grid-cols-3">
-        <div className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-          <p className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Total</p>
-          <p className="mt-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">{totalCount}</p>
-        </div>
-        <div className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-          <p className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">New</p>
-          <p className="mt-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">{newCount}</p>
-        </div>
-        <div className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-          <p className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Linked</p>
-          <p className="mt-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">{linkedCount}</p>
-        </div>
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">Submissions</h1>
+        <p className="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400">
+          Interest form submissions from the public site.
+        </p>
       </div>
 
-      <form className="mb-6 grid gap-3 rounded-lg border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 md:grid-cols-4">
+      {/* Stat strip */}
+      <div className="mb-5 flex flex-wrap gap-4">
+        {[
+          { label: 'Total', value: totalCount },
+          { label: 'New', value: newCount },
+          { label: 'Linked to contact', value: linkedCount },
+        ].map(({ label, value }) => (
+          <div
+            key={label}
+            className="flex items-baseline gap-2 rounded-lg border border-zinc-200 bg-white px-4 py-3 shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
+          >
+            <span className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">{value}</span>
+            <span className="text-xs text-zinc-500 dark:text-zinc-400">{label}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Filter toolbar */}
+      <form className="mb-5 flex flex-wrap items-center gap-2">
         <input
           type="text"
           name="q"
           defaultValue={q}
-          placeholder="Search name or email"
-          className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:ring-zinc-400"
+          placeholder="Search name or email…"
+          className="h-9 min-w-48 rounded-lg border border-zinc-300 px-3 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:ring-zinc-400"
         />
         <select
           name="status"
           defaultValue={statusFilter}
-          className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:ring-zinc-400"
+          className="h-9 rounded-lg border border-zinc-300 px-3 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:ring-zinc-400"
         >
-          <option value="all">All Statuses</option>
-          {submissionStatuses.map((status) => (
-            <option key={status} value={status}>
-              {status}
-            </option>
+          <option value="all">All statuses</option>
+          {submissionStatuses.map((s) => (
+            <option key={s} value={s}>{s}</option>
           ))}
         </select>
         <select
           name="source"
           defaultValue={sourceFilter}
-          className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:ring-zinc-400"
+          className="h-9 rounded-lg border border-zinc-300 px-3 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:ring-zinc-400"
         >
-          <option value="all">All Sources</option>
-          {sourceOptions.map((source) => (
-            <option key={source} value={source}>
-              {source}
-            </option>
+          <option value="all">All sources</option>
+          {sourceOptions.map((s) => (
+            <option key={s} value={s}>{s}</option>
           ))}
         </select>
-        <div className="flex gap-2">
-          <button
-            type="submit"
-            className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
-          >
-            Apply
-          </button>
+        <button
+          type="submit"
+          className="h-9 rounded-lg bg-zinc-900 px-4 text-sm font-medium text-white transition-colors hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+        >
+          Apply
+        </button>
+        {hasFilters && (
           <Link
             href="/dashboard/submissions"
-            className="rounded-full border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-50 dark:hover:bg-zinc-800"
+            className="h-9 flex items-center rounded-lg border border-zinc-300 px-3 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800"
           >
-            Reset
+            Clear
           </Link>
-        </div>
+        )}
       </form>
 
-      {saved ? (
-        <p className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300">
-          {saved === 'linked' ? 'Submission contact linked.' : 'Submission status updated.'}
-        </p>
-      ) : null}
-
-      {hasError ? (
-        <p className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-300">
-          Could not save submission update.
-        </p>
-      ) : null}
-
       {loadError ? (
-        <p className="mb-6 rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-300">
+        <p className="mb-6 rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-300">
           Could not load submissions: {loadError}
         </p>
       ) : null}
 
-      <div className="overflow-x-auto rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+      <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
         <table className="min-w-full text-left text-sm">
-          <thead className="bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-            <tr>
-              <th className="px-4 py-3 font-medium">Created</th>
-              <th className="px-4 py-3 font-medium">Name</th>
-              <th className="px-4 py-3 font-medium">Email</th>
-              <th className="px-4 py-3 font-medium">Source</th>
-              <th className="px-4 py-3 font-medium">Status</th>
-              <th className="px-4 py-3 font-medium">Contact</th>
+          <thead>
+            <tr className="border-b border-zinc-200 dark:border-zinc-800">
+              <th className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                Submitted
+              </th>
+              <th className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                Person
+              </th>
+              <th className="hidden px-4 py-3 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400 sm:table-cell">
+                Email
+              </th>
+              <th className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                Status
+              </th>
+              <th className="hidden px-4 py-3 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400 md:table-cell">
+                Source
+              </th>
+              <th className="px-4 py-3" />
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
             {submissions.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-zinc-500 dark:text-zinc-400">
-                  No submissions yet.
+                <td colSpan={6} className="px-4 py-10 text-center text-sm text-zinc-500 dark:text-zinc-400">
+                  {hasFilters ? 'No submissions match your filters.' : 'No submissions yet.'}
                 </td>
               </tr>
             ) : (
-              submissions.map((submission) => (
-                <tr
-                  key={submission.id}
-                  className="border-t border-zinc-200 text-zinc-800 dark:border-zinc-800 dark:text-zinc-200"
-                >
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    {new Date(submission.created_at).toLocaleString()}
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    {submission.first_name} {submission.last_name}
-                  </td>
-                  <td className="px-4 py-3">{submission.email}</td>
-                  <td className="px-4 py-3">{submission.source ?? 'N/A'}</td>
-                  <td className="px-4 py-3">
-                    <form action={updateSubmissionStatus} className="flex items-center gap-2">
-                      <input type="hidden" name="submission_id" value={submission.id} />
-                      <input type="hidden" name="contact_id" value={submission.contact_id ?? ''} />
-                      <select
-                        name="status"
-                        defaultValue={submission.status}
-                        className="rounded-md border border-zinc-300 px-2 py-1 text-xs text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:ring-zinc-400"
-                      >
-                        {submissionStatuses.map((status) => (
-                          <option key={status} value={status}>
-                            {status}
-                          </option>
-                        ))}
-                      </select>
-                      <button
-                        type="submit"
-                        className="rounded-full border border-zinc-300 px-2 py-1 text-xs font-medium text-zinc-900 transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-50 dark:hover:bg-zinc-800"
-                      >
-                        Save
-                      </button>
-                    </form>
-                  </td>
-                  <td className="px-4 py-3">
-                    {submission.contact_id ? (
-                      <Link
-                        href={`/dashboard/contacts/${submission.contact_id}`}
-                        className="text-sm font-medium text-zinc-900 underline-offset-4 hover:underline dark:text-zinc-50"
-                      >
-                        View Contact
-                      </Link>
-                    ) : (
-                      <form action={linkSubmissionContact}>
-                        <input type="hidden" name="submission_id" value={submission.id} />
-                        <input type="hidden" name="first_name" value={submission.first_name} />
-                        <input type="hidden" name="last_name" value={submission.last_name} />
-                        <input type="hidden" name="email" value={submission.email} />
-                        <input type="hidden" name="source" value={submission.source ?? ''} />
-                        <button
-                          type="submit"
-                          className="rounded-full border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-900 transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-50 dark:hover:bg-zinc-800"
-                        >
-                          Create/Link Contact
-                        </button>
-                      </form>
-                    )}
-                  </td>
-                </tr>
-              ))
+              submissions.map((sub) => {
+                const fullName = `${sub.first_name} ${sub.last_name}`
+                return (
+                  <tr
+                    key={sub.id}
+                    className="transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/40"
+                  >
+                    <td className="px-4 py-3 text-zinc-500 dark:text-zinc-400 whitespace-nowrap">
+                      <RelativeTime date={sub.created_at} />
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2.5">
+                        <Avatar name={fullName} />
+                        <div className="min-w-0">
+                          <p className="font-medium text-zinc-900 dark:text-zinc-50">{fullName}</p>
+                          {sub.contact_id && (
+                            <Link
+                              href={`/dashboard/contacts/${sub.contact_id}`}
+                              className="text-xs text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300"
+                            >
+                              View contact →
+                            </Link>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="hidden px-4 py-3 sm:table-cell">
+                      <CopyEmail email={sub.email} />
+                    </td>
+                    <td className="px-4 py-3">
+                      <StatusBadge status={sub.status} />
+                    </td>
+                    <td className="hidden px-4 py-3 text-zinc-500 capitalize dark:text-zinc-400 md:table-cell">
+                      {sub.source ?? '—'}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <SubmissionRowActions
+                        submissionId={sub.id}
+                        currentStatus={sub.status}
+                        contactId={sub.contact_id}
+                        firstName={sub.first_name}
+                        lastName={sub.last_name}
+                        email={sub.email}
+                        source={sub.source}
+                      />
+                    </td>
+                  </tr>
+                )
+              })
             )}
           </tbody>
         </table>

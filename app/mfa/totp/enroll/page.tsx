@@ -1,10 +1,18 @@
 'use client'
 
-import { FormEvent, useEffect, useMemo, useState } from 'react'
+import { Suspense, FormEvent, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
 
 export default function TotpEnrollPage() {
+  return (
+    <Suspense>
+      <TotpEnrollPageContent />
+    </Suspense>
+  )
+}
+
+function TotpEnrollPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const supabase = useMemo(() => createClient(), [])
