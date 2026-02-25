@@ -55,8 +55,9 @@ export async function POST(request: Request) {
     const retreatName = cleanText(formData.get('retreatName'))
 
     const ageRange = cleanText(formData.get('ageRange'))
-    const runningVolumeRange = cleanText(formData.get('runningVolumeRange'))
-    const budgetRange = cleanText(formData.get('budgetRange'))
+    const gender = cleanText(formData.get('gender'))
+    const genderSelfDescribe = cleanText(formData.get('genderSelfDescribe'))
+    const runnerType = cleanText(formData.get('runnerType'))
     const locationLabel = cleanText(formData.get('locationLabel')) ?? cleanText(formData.get('city'))
 
     const legacyNotes = cleanText(formData.get('notes'))
@@ -70,11 +71,15 @@ export async function POST(request: Request) {
     }
 
     if (formKey !== 'register_interest') {
-      if (!ageRange || !runningVolumeRange || !budgetRange || !locationLabel) {
+      if (!ageRange || !gender || !runnerType || !locationLabel) {
         return NextResponse.json(
-          { error: 'Please complete age, running volume, budget, and location.' },
+          { error: 'Please complete age range, gender, runner type, and location.' },
           { status: 400 }
         )
+      }
+
+      if (gender === 'Self-describe' && !genderSelfDescribe) {
+        return NextResponse.json({ error: 'Please add your gender description.' }, { status: 400 })
       }
 
       if (formKey === 'retreat_registration_v1' && !retreatSlug) {
@@ -84,8 +89,9 @@ export async function POST(request: Request) {
 
     const answers = {
       age_range: ageRange,
-      running_volume_range: runningVolumeRange,
-      budget_range: budgetRange,
+      gender,
+      gender_self_describe: genderSelfDescribe,
+      runner_type: runnerType,
       location_label: locationLabel,
       retreat_slug: retreatSlug,
       retreat_name: retreatName,
@@ -99,8 +105,9 @@ export async function POST(request: Request) {
       source,
       formKey,
       ageRange,
-      runningVolumeRange,
-      budgetRange,
+      gender,
+      genderSelfDescribe,
+      runnerType,
       locationLabel,
       retreatSlug,
       retreatName,
@@ -194,8 +201,9 @@ export async function POST(request: Request) {
       retreatName ? `Retreat: ${retreatName}` : null,
       retreatSlug ? `Retreat slug: ${retreatSlug}` : null,
       ageRange ? `Age range: ${ageRange}` : null,
-      runningVolumeRange ? `Weekly running: ${runningVolumeRange}` : null,
-      budgetRange ? `Budget range: ${budgetRange}` : null,
+      gender ? `Gender: ${gender}` : null,
+      genderSelfDescribe ? `Gender self description: ${genderSelfDescribe}` : null,
+      runnerType ? `Runner type: ${runnerType}` : null,
       locationLabel ? `Location: ${locationLabel}` : null,
       legacyNotes ? `Notes: ${legacyNotes}` : null,
     ].filter(Boolean)
