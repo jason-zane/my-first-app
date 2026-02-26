@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import Link from 'next/link'
 import { HomeHero } from '@/components/site/home/home-hero'
 import { Reveal } from '@/components/site/reveal'
 import { Marquee } from '@/components/site/marquee'
