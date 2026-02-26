@@ -40,6 +40,8 @@ export type Retreat = {
   venueName: string
   venueDescription: string
   venueHighlights: string[]
+  mapEmbedUrl?: string
+  mapLabel?: string
   routes: Route[]
   itinerary: ItineraryDay[]
   included: string[]
@@ -71,15 +73,15 @@ export const retreats: Retreat[] = [
       },
       {
         src: 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=1200&q=80',
-        alt: 'Boutique retreat bedroom with warm natural styling',
+        alt: 'Private bedroom with warm natural styling',
       },
       {
         src: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=1200&q=80',
         alt: 'Outdoor pool and deck with trees surrounding the property',
       },
       {
-        src: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1200&q=80',
-        alt: 'Shared lounge area for relaxing between activities',
+        src: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=1200&q=80',
+        alt: 'Warm bedroom interior with natural materials and soft light',
       },
     ],
     description:
@@ -95,6 +97,9 @@ export const retreats: Retreat[] = [
       'Exclusive use for retreat guests only',
       'Tennis court and outdoor recreation areas',
     ],
+    mapLabel: 'Kalinya Estate, 60 Great Southern Road, Bargo NSW 2574',
+    mapEmbedUrl:
+      'https://www.google.com/maps?q=-34.2757429,150.5778335&z=15&output=embed',
     routes: [
       {
         name: 'The Nattai Circuit',

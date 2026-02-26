@@ -175,6 +175,39 @@ export default async function RetreatPage({ params }: Props) {
         </div>
       </section>
 
+      {retreat.mapEmbedUrl ? (
+        <section className="bg-[var(--site-bg)] py-20 md:py-28">
+          <div className="mx-auto max-w-7xl px-6 md:px-12">
+            <Reveal>
+              <div className="mb-8">
+                <p className="font-ui mb-3 text-xs font-medium uppercase tracking-[0.2em] text-[var(--site-text-muted)]">
+                  Location
+                </p>
+                <h2 className="font-serif text-3xl font-bold text-[var(--site-text-primary)] md:text-4xl">
+                  Where this retreat is based
+                </h2>
+                {retreat.mapLabel ? (
+                  <p className="mt-3 text-sm text-[var(--site-text-body)]">{retreat.mapLabel}</p>
+                ) : null}
+              </div>
+            </Reveal>
+
+            <Reveal delay={0.08}>
+              <div className="overflow-hidden border border-[var(--site-border-soft)] bg-[var(--site-surface-elevated)]">
+                <iframe
+                  title={`${retreat.name} map`}
+                  src={retreat.mapEmbedUrl}
+                  className="h-[360px] w-full md:h-[460px]"
+                  loading="lazy"
+                  allowFullScreen
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
+              </div>
+            </Reveal>
+          </div>
+        </section>
+      ) : null}
+
       {/* ── RETREAT ATMOSPHERE ───────────────────────────────────────────── */}
       <section className="bg-[var(--site-accent-strong)] py-24 md:py-36">
         <div className="mx-auto max-w-7xl px-6 md:px-12">
@@ -384,7 +417,7 @@ export default async function RetreatPage({ params }: Props) {
                 </p>
                 <div className="space-y-4 border-t border-[var(--site-border)] pt-8">
                   {[
-                    'Apply below in under a minute',
+                    'Register your interest below',
                     "We'll reach out to confirm your place",
                     `Secure your spot with a $${retreat.deposit} deposit`,
                   ].map((step, i) => (
@@ -406,7 +439,7 @@ export default async function RetreatPage({ params }: Props) {
                   retreatSlug={retreat.slug}
                   retreatName={retreat.name}
                   source={`retreat:${retreat.slug}`}
-                  submitCtaLabel="Apply for This Retreat in 60 Seconds"
+                  submitCtaLabel="Apply for This Retreat"
                 />
               </div>
             </Reveal>

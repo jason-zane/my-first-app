@@ -12,8 +12,8 @@ export const brandImagery = {
       category: 'people_running',
     } satisfies BrandImage,
     story: {
-      src: 'https://images.unsplash.com/photo-1473445361085-b9a07f55608b?auto=format&fit=crop&w=1200&q=80',
-      alt: 'Runner moving through open scrub trail at steady pace',
+      src: 'https://images.unsplash.com/photo-1623390003553-4fa3f9fceb89?auto=format&fit=crop&w=1200&q=80',
+      alt: 'Runner moving through a wooded trail at easy pace, back view',
       category: 'people_running',
     } satisfies BrandImage,
     connection: {
@@ -46,20 +46,20 @@ export const brandImagery = {
   },
   about: {
     team: {
-      src: 'https://images.unsplash.com/photo-1520975922284-9e0ce82759a3?auto=format&fit=crop&w=1200&q=80',
-      alt: 'Group conversation around a table in natural light',
+      src: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1200&q=80',
+      alt: 'Small group sharing a meal outdoors in warm afternoon light',
       category: 'connection',
     } satisfies BrandImage,
   },
   experience: {
     running: {
-      src: 'https://images.unsplash.com/photo-1452626038306-9aae5e071dd3?auto=format&fit=crop&w=1200&q=80',
-      alt: 'Trail runner moving through a calm woodland section',
+      src: 'https://images.unsplash.com/photo-1752659985958-cb2bc9e5875e?auto=format&fit=crop&w=1200&q=80',
+      alt: 'Two runners at easy pace on a tree-lined path',
       category: 'people_running',
     } satisfies BrandImage,
     table: {
-      src: 'https://images.unsplash.com/photo-1416674181304-c5d0f17c8f3b?auto=format&fit=crop&w=1200&q=80',
-      alt: 'Shared table set for dinner with simple warm styling',
+      src: 'https://images.unsplash.com/photo-1424847651672-bf20a4b0982b?auto=format&fit=crop&w=1200&q=80',
+      alt: 'People sharing a meal around a table with various dishes',
       category: 'connection',
     } satisfies BrandImage,
     company: {

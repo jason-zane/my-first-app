@@ -88,7 +88,7 @@ export default function Home() {
             <div>
               <Reveal delay={0.05}>
                 <p className="font-ui mb-6 text-xs font-medium uppercase tracking-[0.2em] text-[var(--site-text-muted)]">
-                  Built For Real Life Runners
+                  What we are
                 </p>
               </Reveal>
               <Reveal delay={0.15}>
@@ -142,9 +142,9 @@ export default function Home() {
             </Reveal>
             <Reveal delay={0.15}>
               <h2 className="font-serif max-w-lg text-4xl font-bold leading-[1.15] text-[var(--site-bg)] md:text-5xl">
-                Everything considered.
+                The terrain, the group,
                 <br />
-                <span className="italic">Nothing unnecessary.</span>
+                <span className="italic">the time to recover.</span>
               </h2>
             </Reveal>
           </div>

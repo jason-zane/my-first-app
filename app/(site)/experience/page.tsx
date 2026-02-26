@@ -111,7 +111,7 @@ export default function ExperiencePage() {
           <Reveal>
             <div className="mb-14">
               <p className="font-ui mb-5 text-xs font-medium uppercase tracking-[0.2em] text-[var(--site-text-muted)]">
-                What we get right
+                What makes it work
               </p>
               <h2 className="font-serif text-4xl font-bold leading-[1.15] text-[var(--site-text-primary)] md:text-5xl">
                 Four parts that make the weekend work.
@@ -262,10 +262,10 @@ export default function ExperiencePage() {
           <Reveal>
             <div className="mx-auto max-w-xl text-center">
               <h2 className="mb-6 font-serif text-4xl font-bold text-[var(--site-text-primary)]">
-                Ready to apply.
+                The Southern Highlands retreat.
               </h2>
               <p className="mb-10 text-lg leading-relaxed text-[var(--site-text-body)]">
-                Our first retreat is in the Southern Highlands, September 2026. Places are limited.
+                Our first retreat is in the Southern Highlands, September 2026. Twelve places.
               </p>
               <Link
                 href="/retreats"

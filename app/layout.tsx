@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 import { Toaster } from 'sonner'
 import './globals.css'
 
@@ -17,6 +18,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="antialiased">
         {children}
+        <SpeedInsights />
         <Toaster position="bottom-right" richColors closeButton />
       </body>
     </html>
