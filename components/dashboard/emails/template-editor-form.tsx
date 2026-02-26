@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import sanitizeHtml from 'sanitize-html'
 import { RichTextEditor } from '@/components/dashboard/emails/rich-text-editor'
 
 type PreviewMode = 'desktop' | 'mobile'
@@ -54,7 +55,51 @@ export function TemplateEditorForm({
   )
 
   const previewSubject = useMemo(() => applyVariables(subject, sampleVars), [subject, sampleVars])
-  const previewHtml = useMemo(() => applyVariables(htmlBody, sampleVars), [htmlBody, sampleVars])
+  const previewHtml = useMemo(() => {
+    const withVars = applyVariables(htmlBody, sampleVars)
+    return sanitizeHtml(withVars, {
+      allowedTags: [
+        'a',
+        'b',
+        'blockquote',
+        'br',
+        'code',
+        'div',
+        'em',
+        'h1',
+        'h2',
+        'h3',
+        'h4',
+        'h5',
+        'h6',
+        'hr',
+        'i',
+        'img',
+        'li',
+        'ol',
+        'p',
+        'pre',
+        'span',
+        'strong',
+        'table',
+        'tbody',
+        'td',
+        'th',
+        'thead',
+        'tr',
+        'u',
+        'ul',
+      ],
+      allowedAttributes: {
+        a: ['href', 'name', 'target', 'rel'],
+        img: ['src', 'alt', 'width', 'height'],
+        '*': ['style'],
+      },
+      allowedSchemes: ['http', 'https', 'mailto'],
+      allowProtocolRelative: false,
+      disallowedTagsMode: 'discard',
+    })
+  }, [htmlBody, sampleVars])
 
   return (
     <form

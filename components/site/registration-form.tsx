@@ -315,7 +315,7 @@ export function RegistrationForm({
         <div className="text-center">
           <p className="mb-2 font-serif text-3xl font-bold text-[var(--site-text-primary)]">Thank you.</p>
           <p className="text-base text-[var(--site-text-body)]">
-            You&apos;re on the list. We&apos;ll only send meaningful updates.
+            You&apos;re on the list. A confirmation email is on the way.
           </p>
         </div>
 

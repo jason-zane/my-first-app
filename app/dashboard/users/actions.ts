@@ -6,6 +6,7 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { createAdminClient } from '@/utils/supabase/admin'
 import { requireAdminUser } from '@/utils/dashboard-auth'
 import { getPasswordRedirectUrl } from '@/utils/auth-urls'
+import { assertSameOrigin } from '@/utils/security/origin'
 
 const allowedRoles = new Set(['admin', 'staff'])
 type AdminAction =
@@ -17,6 +18,11 @@ type AdminAction =
   | 'user_removed'
 
 async function ensureAdmin() {
+  try {
+    assertSameOrigin()
+  } catch {
+    redirect('/dashboard?error=invalid_origin')
+  }
   const auth = await requireAdminUser()
   if (!auth.authorized) {
     redirect('/dashboard')

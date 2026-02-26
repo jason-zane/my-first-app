@@ -3,9 +3,11 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { Resend } from 'resend'
+import sanitizeHtml from 'sanitize-html'
 import { createAdminClient } from '@/utils/supabase/admin'
 import { requireDashboardUser } from '@/utils/dashboard-auth'
 import { renderTemplate } from '@/utils/email-templates'
+import { assertSameOrigin } from '@/utils/security/origin'
 
 function slugify(value: string) {
   return value
@@ -127,7 +129,61 @@ async function appendAttachmentNote(description: string | null, usageKey: string
   return `${description}\n${note}`
 }
 
+function sanitizeEmailHtml(input: string) {
+  return sanitizeHtml(input, {
+    allowedTags: [
+      'a',
+      'b',
+      'blockquote',
+      'br',
+      'code',
+      'div',
+      'em',
+      'h1',
+      'h2',
+      'h3',
+      'h4',
+      'h5',
+      'h6',
+      'hr',
+      'i',
+      'img',
+      'li',
+      'ol',
+      'p',
+      'pre',
+      'span',
+      'strong',
+      'table',
+      'tbody',
+      'td',
+      'th',
+      'thead',
+      'tr',
+      'u',
+      'ul',
+    ],
+    allowedAttributes: {
+      a: ['href', 'name', 'target', 'rel'],
+      img: ['src', 'alt', 'width', 'height'],
+      '*': ['style'],
+    },
+    allowedSchemes: ['http', 'https', 'mailto'],
+    allowProtocolRelative: false,
+    disallowedTagsMode: 'discard',
+  })
+}
+
+function ensureSameOrigin() {
+  try {
+    assertSameOrigin()
+  } catch {
+    redirect('/dashboard?error=invalid_origin')
+  }
+}
+
 export async function createEmailTemplate(formData: FormData) {
+  ensureSameOrigin()
   const auth = await requireDashboardUser()
   if (!auth.authorized) {
     redirect('/dashboard')
@@ -137,7 +193,8 @@ export async function createEmailTemplate(formData: FormData) {
   const descriptionRaw = String(formData.get('description') ?? '').trim()
   const description = descriptionRaw.length > 0 ? descriptionRaw : null
   const subject = String(formData.get('subject') ?? '').trim()
-  const htmlBody = String(formData.get('html_body') ?? '').trim()
+  const htmlBodyRaw = String(formData.get('html_body') ?? '').trim()
+  const htmlBody = sanitizeEmailHtml(htmlBodyRaw)
   const textBodyRaw = String(formData.get('text_body') ?? '').trim()
   const textBody = textBodyRaw.length > 0 ? textBodyRaw : null
   const usageKeyRaw = String(formData.get('usage_key') ?? '').trim()
@@ -188,6 +245,7 @@ export async function createEmailTemplate(formData: FormData) {
 }
 
 export async function updateEmailTemplate(formData: FormData) {
+  ensureSameOrigin()
   const auth = await requireDashboardUser()
   if (!auth.authorized) {
     redirect('/dashboard')
@@ -195,7 +253,8 @@ export async function updateEmailTemplate(formData: FormData) {
 
   const key = String(formData.get('key') ?? '').trim()
   const subject = String(formData.get('subject') ?? '').trim()
-  const htmlBody = String(formData.get('html_body') ?? '').trim()
+  const htmlBodyRaw = String(formData.get('html_body') ?? '').trim()
+  const htmlBody = sanitizeEmailHtml(htmlBodyRaw)
   const textBodyRaw = String(formData.get('text_body') ?? '').trim()
   const textBody = textBodyRaw.length > 0 ? textBodyRaw : null
   const usageKeyRaw = String(formData.get('usage_key') ?? '').trim()
@@ -251,6 +310,7 @@ export async function updateEmailTemplate(formData: FormData) {
 }
 
 export async function sendTestEmailTemplate(formData: FormData) {
+  ensureSameOrigin()
   const auth = await requireDashboardUser()
   if (!auth.authorized) {
     redirect('/dashboard')
@@ -258,7 +318,8 @@ export async function sendTestEmailTemplate(formData: FormData) {
 
   const key = String(formData.get('key') ?? '')
   const subject = String(formData.get('subject') ?? '').trim()
-  const htmlBody = String(formData.get('html_body') ?? '').trim()
+  const htmlBodyRaw = String(formData.get('html_body') ?? '').trim()
+  const htmlBody = sanitizeEmailHtml(htmlBodyRaw)
   const textBodyRaw = String(formData.get('text_body') ?? '').trim()
   const textBody = textBodyRaw.length > 0 ? textBodyRaw : null
   const sendToMe = String(formData.get('send_to_me') ?? '') === '1'

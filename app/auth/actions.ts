@@ -5,8 +5,18 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
 import { createAdminClient } from '@/utils/supabase/admin'
 import { getPasswordRedirectUrl } from '@/utils/auth-urls'
+import { assertSameOrigin } from '@/utils/security/origin'
+
+function ensureSameOrigin(fallback: string) {
+  try {
+    assertSameOrigin()
+  } catch {
+    redirect(fallback)
+  }
+}
 
 export async function login(formData: FormData) {
+  ensureSameOrigin('/login?error=invalid_origin')
   const supabase = await createClient()
   const email = String(formData.get('email') ?? '')
     .trim()
@@ -62,11 +72,13 @@ export async function login(formData: FormData) {
 }
 
 export async function signup(formData: FormData) {
+  ensureSameOrigin('/login?error=invalid_origin')
   void formData
   redirect('/login?error=' + encodeURIComponent('Account creation is invite-only.'))
 }
 
 export async function requestPasswordReset(formData: FormData) {
+  ensureSameOrigin('/login?reset_error=invalid_origin')
   const email = String(formData.get('email') ?? '')
     .trim()
     .toLowerCase()
@@ -94,6 +106,7 @@ export async function requestPasswordReset(formData: FormData) {
 }
 
 export async function logout() {
+  ensureSameOrigin('/login?error=invalid_origin')
   const supabase = await createClient()
   await supabase.auth.signOut()
   revalidatePath('/', 'layout')

@@ -5,8 +5,14 @@ import { redirect } from 'next/navigation'
 import { Resend } from 'resend'
 import { createAdminClient } from '@/utils/supabase/admin'
 import { requireDashboardUser } from '@/utils/dashboard-auth'
+import { assertSameOrigin } from '@/utils/security/origin'
 
 async function ensureDashboardUser() {
+  try {
+    assertSameOrigin()
+  } catch {
+    redirect('/dashboard?error=invalid_origin')
+  }
   const auth = await requireDashboardUser()
   if (!auth.authorized) {
     redirect('/dashboard')

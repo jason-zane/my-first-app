@@ -1,6 +1,6 @@
 'use client'
 
-import { motion, useScroll, useTransform } from 'framer-motion'
+import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 
 type Props = {
@@ -33,6 +33,8 @@ export function ParallaxHero({
   youtubeStartSeconds = 0,
 }: Props) {
   const ref = useRef<HTMLElement>(null)
+  const prefersReducedMotion = useReducedMotion()
+  const [mediaEnabled, setMediaEnabled] = useState(false)
   const [youtubeLoaded, setYoutubeLoaded] = useState(false)
   const [youtubeFailed, setYoutubeFailed] = useState(false)
   const [videoFailed, setVideoFailed] = useState(false)
@@ -40,6 +42,7 @@ export function ParallaxHero({
   const imageY = useTransform(scrollYProgress, [0, 1], ['0%', '35%'])
   const shouldUseYouTube = useYouTube && !youtubeFailed && !!youtubeVideoId
   const shouldUseVideo = !shouldUseYouTube && useVideo && !videoFailed && (!!videoSrcMp4 || !!videoSrcWebm)
+  const allowMotionMedia = !prefersReducedMotion
   const youtubeUrl = useMemo(() => {
     if (!youtubeVideoId) return ''
     const params = new URLSearchParams({
@@ -65,45 +68,68 @@ export function ParallaxHero({
     return () => clearTimeout(timer)
   }, [shouldUseYouTube, youtubeLoaded])
 
+  useEffect(() => {
+    if (!allowMotionMedia || !(shouldUseYouTube || shouldUseVideo)) return
+    let cancelled = false
+    const enable = () => {
+      if (!cancelled) setMediaEnabled(true)
+    }
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      const handle = window.requestIdleCallback(() => enable(), { timeout: 2500 })
+      return () => {
+        cancelled = true
+        window.cancelIdleCallback?.(handle)
+      }
+    }
+    const timeout = window.setTimeout(enable, 1800)
+    return () => {
+      cancelled = true
+      window.clearTimeout(timeout)
+    }
+  }, [allowMotionMedia, shouldUseYouTube, shouldUseVideo])
+
   return (
     <section ref={ref} className={`relative flex items-end overflow-hidden pb-24 md:pb-36 ${minHeight}`}>
       <motion.div className="absolute inset-0 h-[130%] -top-[15%]" style={{ y: imageY }}>
-        {shouldUseYouTube ? (
-          <iframe
-            title="Hero video"
-            src={youtubeUrl}
-            className={`pointer-events-none h-full w-full object-cover ${imgClassName}`}
-            allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
-            allowFullScreen
-            referrerPolicy="strict-origin-when-cross-origin"
-            onLoad={() => setYoutubeLoaded(true)}
-          />
-        ) : shouldUseVideo ? (
-          <video
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="metadata"
-            poster={posterSrc ?? src}
-            onError={() => setVideoFailed(true)}
+        <div className="relative h-full w-full">
+          {/* Plain img intentional; fill layout is incompatible with this parallax overflow trick */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={posterSrc ?? src}
+            alt={alt}
+            fetchPriority="high"
+            loading="eager"
+            decoding="async"
             className={`h-full w-full object-cover ${imgClassName}`}
-          >
-            {videoSrcWebm ? <source src={videoSrcWebm} type="video/webm" /> : null}
-            {videoSrcMp4 ? <source src={videoSrcMp4} type="video/mp4" /> : null}
-          </video>
-        ) : (
-          <>
-            {/* Plain img intentional; fill layout is incompatible with this parallax overflow trick */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={src}
-              alt={alt}
-              fetchPriority="high"
-              className={`h-full w-full object-cover ${imgClassName}`}
+          />
+          {mediaEnabled && shouldUseYouTube ? (
+            <iframe
+              title="Hero video"
+              src={youtubeUrl}
+              className={`pointer-events-none absolute inset-0 h-full w-full object-cover ${imgClassName}`}
+              allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="strict-origin-when-cross-origin"
+              onLoad={() => setYoutubeLoaded(true)}
             />
-          </>
-        )}
+          ) : null}
+          {mediaEnabled && !shouldUseYouTube && shouldUseVideo ? (
+            <video
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              poster={posterSrc ?? src}
+              onError={() => setVideoFailed(true)}
+              className={`absolute inset-0 h-full w-full object-cover ${imgClassName}`}
+            >
+              {videoSrcWebm ? <source src={videoSrcWebm} type="video/webm" /> : null}
+              {videoSrcMp4 ? <source src={videoSrcMp4} type="video/mp4" /> : null}
+            </video>
+          ) : null}
+        </div>
       </motion.div>
       <div className="absolute inset-0 bg-gradient-to-t from-stone-950/85 via-stone-900/40 to-stone-900/10" />
       {children}

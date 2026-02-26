@@ -7,6 +7,7 @@ import {
 } from '@/utils/services/submissions'
 import { createContactEvent, upsertContactByEmail } from '@/utils/services/contacts'
 import { syncContactProfileFromSubmission } from '@/utils/services/contact-profile-sync'
+import { checkRateLimit } from '@/utils/security/ratelimit'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -31,6 +32,18 @@ const PROFILE_FIELDS = [
 
 export async function POST(request: Request) {
   try {
+    const ipAddress =
+      request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+      request.headers.get('x-real-ip')?.trim() ||
+      'unknown'
+    const rateLimit = await checkRateLimit(`register-profile:${ipAddress}`)
+    if (!rateLimit.ok) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please wait and try again.' },
+        { status: 429 }
+      )
+    }
+
     const formData = await request.formData()
     const email = String(formData.get('email') ?? '')
       .trim()
@@ -98,7 +111,7 @@ export async function POST(request: Request) {
       rawPayload,
       reviewStatus: 'approved',
       priority: 'normal',
-      ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? null,
+      ipAddress: ipAddress === 'unknown' ? null : ipAddress,
       userAgent: request.headers.get('user-agent') ?? null,
     })
 

@@ -57,7 +57,22 @@ export async function requireDashboardUser(): Promise<DashboardAuthResult> {
   }
 
   const allowBootstrap = process.env.ALLOW_ADMIN_EMAIL_BOOTSTRAP === 'true'
-  if (allowBootstrap && isAdminEmail(user.email)) {
+  if (allowBootstrap && isAdminEmail(user.email) && adminClient) {
+    const { count, error } = await adminClient
+      .from('profiles')
+      .select('user_id', { count: 'exact', head: true })
+      .eq('role', 'admin')
+    if (!error && (count ?? 0) === 0) {
+      return {
+        user,
+        authorized: true as const,
+        role: 'admin' as DashboardRole,
+        bootstrap: true as const,
+      }
+    }
+  }
+
+  if (allowBootstrap && isAdminEmail(user.email) && !adminClient) {
     return { user, authorized: true as const, role: 'admin' as DashboardRole, bootstrap: true as const }
   }
 

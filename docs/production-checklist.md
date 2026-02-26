@@ -12,9 +12,13 @@ Set these environment variables in Vercel for the Production environment:
 - `RESEND_NOTIFICATION_TO` (ops inbox)
 - `RESEND_REPLY_TO` (optional)
 - `ADMIN_DASHBOARD_EMAILS` (comma-separated admin emails)
+- `CRON_SECRET` (shared secret for email job processor)
 - `NEXT_PUBLIC_SITE_URL=https://milesbetween.com`
 - `ALLOW_ADMIN_EMAIL_BOOTSTRAP=false` (set `true` only during first-admin bootstrap)
 - `ENFORCE_ADMIN_TOTP=true`
+- `UPSTASH_REDIS_REST_URL`
+- `UPSTASH_REDIS_REST_TOKEN`
+- `HEALTHCHECK_TOKEN`
 
 Redeploy after setting/updating env vars.
 
@@ -61,3 +65,11 @@ npm run db:push
 4. Confirm login works and `/dashboard` loads
 5. Run a password reset from login page and confirm flow works
 6. Submit the public interest form and confirm both emails send
+
+## 7) Email Queue Cron
+
+Create a Vercel Cron job to run every 5 minutes:
+
+- URL: `https://milesbetween.com/api/cron/email-jobs`
+- Method: `GET`
+- Header: `Authorization: Bearer $CRON_SECRET`

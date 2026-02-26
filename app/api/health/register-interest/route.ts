@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { headers } from 'next/headers'
 import { createClient } from '@supabase/supabase-js'
 
 type CheckResult = {
@@ -46,6 +47,18 @@ async function checkTable(supabase: any, tableName: string, columnName: string):
 }
 
 export async function GET() {
+  const token = process.env.HEALTHCHECK_TOKEN
+  if (token) {
+    const reqHeaders = headers()
+    const authHeader = reqHeaders.get('authorization')
+    const customHeader = reqHeaders.get('x-health-token')
+    const isAuthorized =
+      authHeader === `Bearer ${token}` || customHeader === token
+    if (!isAuthorized) {
+      return NextResponse.json({ ok: false }, { status: 401 })
+    }
+  }
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   const resendApiKey = process.env.RESEND_API_KEY

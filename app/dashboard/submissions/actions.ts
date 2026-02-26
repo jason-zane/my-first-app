@@ -6,6 +6,7 @@ import { createAdminClient } from '@/utils/supabase/admin'
 import { requireDashboardUser } from '@/utils/dashboard-auth'
 import { upsertContactByEmail, createContactEvent } from '@/utils/services/contacts'
 import { createSubmissionEvent, linkSubmissionToContact } from '@/utils/services/submissions'
+import { assertSameOrigin } from '@/utils/security/origin'
 
 type ReviewDecision = 'approved' | 'rejected'
 
@@ -32,6 +33,11 @@ function getContactFieldKey(reviewFieldKey: string) {
 }
 
 async function ensureDashboardUser() {
+  try {
+    assertSameOrigin()
+  } catch {
+    redirect('/dashboard?error=invalid_origin')
+  }
   const auth = await requireDashboardUser()
   if (!auth.authorized) {
     redirect('/dashboard')

@@ -1,8 +1,5 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { Resend } from 'resend'
-import { renderTemplate } from '@/utils/email-templates'
-import { getRuntimeEmailTemplates } from '@/utils/services/email-templates'
 import {
   createInterestSubmission,
   createSubmissionEvent,
@@ -10,6 +7,7 @@ import {
 } from '@/utils/services/submissions'
 import { createContactEvent, upsertContactByEmail } from '@/utils/services/contacts'
 import { syncContactProfileFromSubmission } from '@/utils/services/contact-profile-sync'
+import { checkRateLimit } from '@/utils/security/ratelimit'
 
 const resendApiKey = process.env.RESEND_API_KEY
 const fromEmail = process.env.RESEND_FROM_EMAIL
@@ -38,6 +36,18 @@ function parseFormKey(value: string | null) {
 
 export async function POST(request: Request) {
   try {
+    const ipAddress =
+      request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+      request.headers.get('x-real-ip')?.trim() ||
+      'unknown'
+    const rateLimit = await checkRateLimit(`register-interest:${ipAddress}`)
+    if (!rateLimit.ok) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please wait and try again.' },
+        { status: 429 }
+      )
+    }
+
     if (!resendApiKey) {
       return NextResponse.json({ error: 'Email service is not configured.' }, { status: 500 })
     }
@@ -158,7 +168,7 @@ export async function POST(request: Request) {
         rawPayload,
         reviewStatus: 'approved',
         priority: 'normal',
-        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? null,
+        ipAddress: ipAddress === 'unknown' ? null : ipAddress,
         userAgent: request.headers.get('user-agent') ?? null,
       })
 
@@ -241,10 +251,7 @@ export async function POST(request: Request) {
       }
     }
 
-    const resend = new Resend(resendApiKey)
     const sourceLabel = source ?? 'Not provided'
-    const templates = await getRuntimeEmailTemplates(adminClient)
-
     const summaryLines = [
       formKey ? `Form type: ${formKey}` : null,
       retreatName ? `Retreat: ${retreatName}` : null,
@@ -275,49 +282,38 @@ export async function POST(request: Request) {
       notes: notesHtml,
     }
 
-    const internalNotification = renderTemplate(
-      templates.interest_internal_notification,
-      templateVars,
-      true
-    )
-    const confirmation = renderTemplate(templates.interest_user_confirmation, templateVars, true)
+    let emailQueued = false
 
-    const internalEmailResult = await resend.emails.send({
-      from: fromEmail,
-      to: notificationTo,
-      replyTo: replyTo ?? email,
-      subject: internalNotification.subject,
-      html: internalNotification.html,
-      text: internalNotification.text ?? undefined,
-    })
-
-    if (internalEmailResult.error) {
-      return NextResponse.json(
+    if (adminClient) {
+      const { error: enqueueError } = await adminClient.from('email_jobs').insert([
         {
-          error:
-            'Could not send notification email. Verify your Resend sender domain and from address.',
+          job_type: 'register_interest_internal',
+          payload: {
+            to: notificationTo,
+            reply_to: replyTo ?? email,
+            template_vars: templateVars,
+            template_kind: 'interest_internal',
+          },
         },
-        { status: 500 }
-      )
+        {
+          job_type: 'register_interest_user',
+          payload: {
+            to: email,
+            reply_to: replyTo ?? notificationTo,
+            template_vars: templateVars,
+            template_kind: 'interest_user',
+          },
+        },
+      ])
+
+      if (enqueueError) {
+        console.error('email queue insert failed:', enqueueError.message)
+      } else {
+        emailQueued = true
+      }
     }
 
-    const confirmationEmailResult = await resend.emails.send({
-      from: fromEmail,
-      to: email,
-      replyTo: replyTo ?? notificationTo,
-      subject: confirmation.subject,
-      html: confirmation.html,
-      text: confirmation.text ?? undefined,
-    })
-
-    if (confirmationEmailResult.error) {
-      return NextResponse.json(
-        { error: 'Saved registration, but confirmation email could not be sent.' },
-        { status: 500 }
-      )
-    }
-
-    return NextResponse.json({ ok: true, submissionId, next: 'optional_profile' })
+    return NextResponse.json({ ok: true, submissionId, next: 'optional_profile', emailQueued })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown server error.'
     console.error('register-interest error:', message)
