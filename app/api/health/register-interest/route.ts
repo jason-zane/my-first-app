@@ -49,7 +49,7 @@ async function checkTable(supabase: any, tableName: string, columnName: string):
 export async function GET() {
   const token = process.env.HEALTHCHECK_TOKEN
   if (token) {
-    const reqHeaders = headers()
+    const reqHeaders = await headers()
     const authHeader = reqHeaders.get('authorization')
     const customHeader = reqHeaders.get('x-health-token')
     const isAuthorized =
