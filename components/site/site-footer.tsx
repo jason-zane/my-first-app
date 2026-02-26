@@ -1,6 +1,9 @@
+'use client'
+
 import Link from 'next/link'
 import { siteButtonClasses, siteTextClasses } from '@/utils/brand/site-brand'
 import { CONTACT_EMAIL_LABEL, MAILTO_GENERAL } from '@/utils/brand/contact'
+import { TransitionLink } from '@/components/site/transition-link'
 
 export function SiteFooter() {
   return (
@@ -26,13 +29,13 @@ export function SiteFooter() {
                 { href: '/faq', label: 'FAQ' },
                 { href: '/terms-and-conditions', label: 'Terms' },
               ].map((link) => (
-                <Link
+                <TransitionLink
                   key={link.href}
                   href={link.href}
                   className="font-ui text-sm tracking-[0.02em] text-[var(--site-on-dark-muted)] transition-colors hover:text-[var(--site-on-dark-primary)]"
                 >
                   {link.label}
-                </Link>
+                </TransitionLink>
               ))}
             </nav>
           </div>

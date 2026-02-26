@@ -1,8 +1,8 @@
 'use client'
 
-import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { ParallaxHero } from '@/components/site/parallax-hero'
+import { TransitionLink } from '@/components/site/transition-link'
 import { trackSiteEvent } from '@/utils/analytics'
 import { brandImagery } from '@/utils/brand/imagery'
 
@@ -14,9 +14,7 @@ export function HomeHero() {
       imgClassName="object-[center_38%] md:object-center"
       useYouTube
       youtubeVideoId="kZAoizsl-kI"
-      useVideo
-      videoSrcMp4="/video/home-hero-running.mp4"
-      posterSrc={brandImagery.home.hero.src}
+      posterSrc="https://i.ytimg.com/vi/kZAoizsl-kI/maxresdefault.jpg"
     >
       <div className="relative z-10 mx-auto w-full max-w-7xl px-6 md:px-12">
         <div className="max-w-4xl">
@@ -55,7 +53,7 @@ export function HomeHero() {
             transition={{ duration: 0.6, delay: 0.9 }}
             className="mt-10 flex flex-wrap gap-4"
           >
-            <Link
+            <TransitionLink
               href="/retreats"
               onClick={() =>
                 trackSiteEvent('cta_clicked', {
@@ -66,8 +64,8 @@ export function HomeHero() {
               className="font-ui bg-[var(--site-cta-bg)] px-8 py-4 text-sm font-medium tracking-[0.02em] text-[var(--site-cta-text)] transition-colors hover:bg-[var(--site-cta-hover-bg)]"
             >
               Explore Retreats
-            </Link>
-            <Link
+            </TransitionLink>
+            <TransitionLink
               href="/experience"
               onClick={() =>
                 trackSiteEvent('cta_clicked', {
@@ -78,7 +76,7 @@ export function HomeHero() {
               className="font-ui border border-white/60 px-8 py-4 text-sm font-medium tracking-[0.02em] text-white transition-colors hover:bg-[var(--site-surface-elevated)]/10"
             >
               See The Experience
-            </Link>
+            </TransitionLink>
           </motion.div>
         </div>
       </div>

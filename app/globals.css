@@ -71,6 +71,12 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 240ms;
+  animation-timing-function: ease-out;
+}
+
 .site-theme-v1 {
   --text-hero: 60px;
   --text-h2: 40px;

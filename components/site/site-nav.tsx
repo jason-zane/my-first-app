@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
+import { TransitionLink } from '@/components/site/transition-link'
 import { trackSiteEvent } from '@/utils/analytics'
 import { siteButtonClasses, siteTextClasses } from '@/utils/brand/site-brand'
 import { CONTACT_EMAIL_LABEL, MAILTO_GENERAL } from '@/utils/brand/contact'
@@ -42,6 +43,7 @@ export function SiteNav() {
   const isRetreatDetail = pathname.startsWith('/retreats/')
   const primaryCtaHref = isRetreatDetail ? '#register' : '/#register'
   const primaryCtaLabel = isRetreatDetail ? 'Apply for This Retreat' : 'Join Retreat List'
+  const PrimaryLink = primaryCtaHref.includes('#') ? Link : TransitionLink
 
   return (
     <>
@@ -51,18 +53,18 @@ export function SiteNav() {
         }`}
       >
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5 md:px-12">
-          <Link
+          <TransitionLink
             href="/"
             className={`font-serif text-xl font-bold tracking-tight transition-colors duration-500 ${
               dark ? 'text-[var(--site-on-dark-primary)]' : 'text-white'
             }`}
           >
             MILES // BETWEEN
-          </Link>
+          </TransitionLink>
 
           <div className="hidden items-center gap-8 md:flex">
             {NAV_LINKS.map((link) => (
-              <Link
+              <TransitionLink
                 key={link.href}
                 href={link.href}
                 className={`relative transition-colors duration-300 ${siteTextClasses.nav} ${
@@ -79,9 +81,9 @@ export function SiteNav() {
                     transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                   />
                 )}
-              </Link>
+              </TransitionLink>
             ))}
-            <Link
+            <PrimaryLink
               href={primaryCtaHref}
               onClick={() =>
                 trackSiteEvent('cta_clicked', {
@@ -96,7 +98,7 @@ export function SiteNav() {
               }`}
             >
               {primaryCtaLabel}
-            </Link>
+            </PrimaryLink>
           </div>
 
           <button
@@ -151,7 +153,7 @@ export function SiteNav() {
                   exit={{ opacity: 0, x: -24 }}
                   transition={{ duration: 0.3, delay: i * 0.07 }}
                 >
-                  <Link
+                  <TransitionLink
                     href={link.href}
                     onClick={() => setMobileOpen(false)}
                     className={`block py-3 font-ui text-2xl font-medium tracking-[0.02em] transition-colors ${
@@ -161,7 +163,7 @@ export function SiteNav() {
                     }`}
                   >
                     {link.label}
-                  </Link>
+                  </TransitionLink>
                 </motion.div>
               ))}
               <motion.div
@@ -171,7 +173,7 @@ export function SiteNav() {
                 transition={{ duration: 0.3, delay: NAV_LINKS.length * 0.07 }}
                 className="mt-8"
               >
-                <Link
+                <PrimaryLink
                   href={primaryCtaHref}
                   onClick={() => {
                     setMobileOpen(false)
@@ -183,7 +185,7 @@ export function SiteNav() {
                   className={`inline-block rounded-full px-7 py-3.5 text-sm font-medium transition-colors ${siteButtonClasses.outlineDark}`}
                 >
                   {primaryCtaLabel}
-                </Link>
+                </PrimaryLink>
               </motion.div>
             </div>
 
