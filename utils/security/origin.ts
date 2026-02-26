@@ -26,8 +26,8 @@ export function getAllowedOrigins() {
   return allowed
 }
 
-export function assertSameOrigin() {
-  const reqHeaders = headers()
+export async function assertSameOrigin() {
+  const reqHeaders = await headers()
   const origin = normalizeOrigin(reqHeaders.get('origin'))
   const host = reqHeaders.get('host')
   const hostOrigin = host ? normalizeOrigin(`https://${host}`) : null
