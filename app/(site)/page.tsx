@@ -18,6 +18,8 @@ export default function Home() {
         src={brandImagery.home.hero.src}
         alt={brandImagery.home.hero.alt}
         imgClassName="object-[center_38%] md:object-center"
+        useYouTube
+        youtubeVideoId="kZAoizsl-kI"
         useVideo
         videoSrcMp4="/video/home-hero-running.mp4"
         posterSrc={brandImagery.home.hero.src}
