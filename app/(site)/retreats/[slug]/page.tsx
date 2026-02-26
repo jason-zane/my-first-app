@@ -146,7 +146,7 @@ export default async function RetreatPage({ params }: Props) {
                 <ul className="space-y-3">
                   {retreat.venueHighlights.map((item) => (
                     <li key={item} className="flex items-start gap-3">
-                      <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--site-accent-strong)]" />
+                      <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--site-cta-bg)]" />
                       <span className="text-[var(--site-text-body)]">{item}</span>
                     </li>
                   ))}
@@ -267,9 +267,9 @@ export default async function RetreatPage({ params }: Props) {
                   <ul className="space-y-2">
                     {card.bullets.map((bullet) => (
                       <li key={bullet} className="flex items-start gap-2 text-sm leading-relaxed text-[var(--site-text-body)]">
-                        <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--site-accent-strong)]" />
-                        <span>{bullet}</span>
-                      </li>
+                      <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--site-cta-bg)]" />
+                      <span>{bullet}</span>
+                    </li>
                     ))}
                   </ul>
                 </div>
@@ -297,14 +297,14 @@ export default async function RetreatPage({ params }: Props) {
             <Reveal delay={0.1}>
               <div className="grid grid-cols-1 gap-12 md:grid-cols-2">
                 <div>
-                  <p className="font-ui mb-6 text-sm font-medium uppercase tracking-[0.15em] text-[var(--site-accent-strong)]">
+                  <p className="font-ui mb-6 text-sm font-medium uppercase tracking-[0.15em] text-[var(--site-cta-bg)]">
                     Included
                   </p>
                   <ul className="space-y-3">
                     {retreat.included.map((item) => (
                       <li key={item} className="flex items-start gap-3 text-[var(--site-text-body)]">
                         <svg
-                          className="mt-0.5 h-5 w-5 shrink-0 text-[var(--site-accent-strong)]"
+                          className="mt-0.5 h-5 w-5 shrink-0 text-[var(--site-cta-bg)]"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -389,7 +389,7 @@ export default async function RetreatPage({ params }: Props) {
                     `Secure your spot with a $${retreat.deposit} deposit`,
                   ].map((step, i) => (
                     <div key={step} className="flex items-center gap-4">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--site-accent-strong)] text-sm font-bold text-white">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--site-cta-bg)] text-sm font-bold text-white">
                         {i + 1}
                       </div>
                       <p className="text-[var(--site-text-body)]">{step}</p>

@@ -18,7 +18,7 @@ const STATUS_LABEL: Record<string, string> = {
 
 const STATUS_COLOR: Record<string, string> = {
   upcoming: 'bg-amber-100 text-amber-800',
-  open: 'bg-green-100 text-green-800',
+  open: 'bg-[color:var(--site-cta-soft)] text-[var(--site-cta-bg)]',
   'sold-out': 'bg-[var(--site-border-soft)] text-[var(--site-text-body)]',
 }
 
@@ -97,7 +97,7 @@ export default function RetreatsPage() {
                           <span className="text-sm font-normal text-[var(--site-text-muted)]"> pp</span>
                         </p>
                       </div>
-                      <span className="font-ui text-sm font-medium tracking-[0.02em] text-[var(--site-accent-strong)] group-hover:underline">
+                      <span className="font-ui text-sm font-medium tracking-[0.02em] text-[var(--site-cta-bg)] group-hover:underline">
                         View retreat →
                       </span>
                     </div>

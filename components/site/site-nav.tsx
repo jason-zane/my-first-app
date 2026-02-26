@@ -57,7 +57,7 @@ export function SiteNav() {
               dark ? 'text-[var(--site-on-dark-primary)]' : 'text-white'
             }`}
           >
-            Miles Between
+            MILES // BETWEEN
           </Link>
 
           <div className="hidden items-center gap-8 md:flex">
@@ -188,12 +188,12 @@ export function SiteNav() {
             </div>
 
             <div className="pb-12">
-              <Link
+              <a
                 href={MAILTO_GENERAL}
-                className="font-ui text-sm tracking-[0.02em] text-[var(--site-text-secondary)] transition-colors hover:text-[var(--site-on-dark-primary)]"
+                className="font-ui block text-sm tracking-[0.02em] text-[var(--site-text-secondary)] transition-colors hover:text-[var(--site-on-dark-primary)]"
               >
                 {CONTACT_EMAIL_LABEL}
-              </Link>
+              </a>
             </div>
           </motion.div>
         )}

@@ -27,6 +27,7 @@
   --site-cta-hover-bg: #461616;
   --site-cta-active-bg: #461616;
   --site-cta-ring: rgba(90, 31, 31, 0.35);
+  --site-cta-soft: rgba(90, 31, 31, 0.08);
   --site-link: #2c4a3e;
   --site-link-hover: #5a1f1f;
   --site-primary: #2c4a3e;

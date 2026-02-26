@@ -39,11 +39,9 @@ export default function Home() {
                 transition={{ duration: 0.8, delay: 0.45, ease: [0.21, 0.47, 0.32, 0.98] }}
                 className="mb-8 font-serif text-5xl font-bold leading-[1.05] text-white md:text-7xl lg:text-[5.5rem]"
               >
-                Retreats for runners
+                The run matters.
                 <br />
-                who want more than
-                <br />
-                <span className="italic">a training block.</span>
+                So does <span className="italic">everything in between.</span>
               </motion.h1>
             </div>
             <motion.p
@@ -52,8 +50,8 @@ export default function Home() {
               transition={{ duration: 0.7, delay: 0.7 }}
               className="max-w-xl text-lg leading-relaxed text-[var(--site-on-dark-muted)] md:text-xl"
             >
-              Run in extraordinary places, recover properly, and spend a long weekend with people
-              who love running without making it their entire identity.
+              Retreats built around the run, the food, the conversation, and the rare feeling of
+              having nowhere else to be.
             </motion.p>
             <motion.div
               initial={{ opacity: 0, y: 16 }}
@@ -240,7 +238,7 @@ export default function Home() {
                 ].map((item, i) => (
                   <Reveal key={i} delay={0.3 + i * 0.1}>
                     <li className="flex items-start gap-5">
-                      <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--site-accent-strong)]" />
+                      <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--site-cta-bg)]" />
                       <p className="text-lg leading-relaxed text-[var(--site-text-body)]">{item}</p>
                     </li>
                   </Reveal>
@@ -267,7 +265,7 @@ export default function Home() {
                 </h2>
               </Reveal>
               <Reveal delay={0.25}>
-                <p className="mb-8 text-sm font-medium tracking-wide text-[var(--site-accent-strong)]">
+                <p className="mb-8 text-sm font-medium tracking-wide text-[var(--site-cta-bg)]">
                   Bargo, NSW • 24–27 September 2026
                 </p>
               </Reveal>

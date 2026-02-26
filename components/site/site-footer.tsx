@@ -8,7 +8,7 @@ export function SiteFooter() {
       <div className="mx-auto max-w-7xl px-6 md:px-12">
         <div className="grid grid-cols-1 gap-12 md:grid-cols-3">
           <div>
-            <p className="mb-3 font-serif text-2xl font-bold text-[var(--site-on-dark-primary)]">Miles Between</p>
+            <p className="mb-3 font-serif text-2xl font-bold text-[var(--site-on-dark-primary)]">MILES // BETWEEN</p>
             <p className="text-sm leading-relaxed text-[var(--site-text-secondary)]">
               Running retreats for people who love running.
             </p>
@@ -41,12 +41,12 @@ export function SiteFooter() {
             <p className={`mb-4 text-[var(--site-text-secondary)] ${siteTextClasses.eyebrow}`}>
               Get in touch
             </p>
-            <Link
+            <a
               href={MAILTO_GENERAL}
               className="font-ui text-sm tracking-[0.02em] text-[var(--site-on-dark-muted)] transition-colors hover:text-[var(--site-on-dark-primary)]"
             >
               {CONTACT_EMAIL_LABEL}
-            </Link>
+            </a>
             <div className="mt-4">
               <Link
                 href="/#register"
@@ -60,7 +60,7 @@ export function SiteFooter() {
 
         <div className="mt-12 border-t border-[color:var(--site-on-dark-primary)]/10 pt-8 text-center">
           <p className="text-xs text-[var(--site-text-secondary)]">
-            © {new Date().getFullYear()} Miles Between. All rights reserved.
+            © {new Date().getFullYear()} MILES // BETWEEN. All rights reserved.
           </p>
         </div>
       </div>

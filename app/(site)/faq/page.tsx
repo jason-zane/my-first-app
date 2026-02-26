@@ -230,12 +230,12 @@ export default function FaqPage() {
                 </p>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row">
-                <Link
+                <a
                   href={MAILTO_FAQ}
                   className="font-ui inline-block border border-[var(--site-text-primary)] px-7 py-3.5 text-sm font-medium tracking-[0.02em] text-[var(--site-text-primary)] transition-colors hover:bg-[var(--site-cta-bg)] hover:text-[var(--site-cta-text)]"
                 >
                   Email Us
-                </Link>
+                </a>
                 <Link
                   href="/retreats/sydney-southern-highlands#register"
                   className="font-ui inline-block bg-[var(--site-cta-bg)] px-7 py-3.5 text-sm font-medium tracking-[0.02em] text-[var(--site-cta-text)] transition-colors hover:bg-[var(--site-cta-hover-bg)]"

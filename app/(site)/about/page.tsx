@@ -12,20 +12,20 @@ export const metadata: Metadata = {
 
 const VALUES = [
   {
-    title: 'Clarity over metrics',
-    body: 'We care about how running feels in your day to day life, not how many charts you can produce from it.',
+    title: 'Clarity over noise',
+    body: 'A retreat should simplify your headspace, not overload it. We strip away anything that feels performative or unnecessary.',
   },
   {
-    title: 'Recovery is part of the plan',
-    body: 'You should not need to earn rest. We build it directly into each day of the retreat.',
+    title: 'Recovery is non-negotiable',
+    body: 'Rest is not a reward after effort. It is part of the design from the start, because that is how people actually feel better.',
   },
   {
-    title: 'Small is intentional',
-    body: 'Every retreat is capped at 12 guests so you can actually know the people you run with.',
+    title: 'Community is the point',
+    body: 'Connection is not a side effect. We keep groups small so the people around you become part of why the retreat works.',
   },
   {
-    title: 'Place comes first',
-    body: 'We choose locations for the quality of the terrain, then shape accommodation and schedule around that.',
+    title: 'Place shapes everything',
+    body: 'Terrain, accommodation, pacing, and flow all come from the location first. The programme follows the place, not the other way around.',
   },
 ]
 
@@ -89,7 +89,7 @@ export default function AboutPage() {
                 What we believe
               </p>
               <h2 className="font-serif text-4xl font-bold leading-[1.15] text-[var(--site-text-primary)] md:text-5xl">
-                What we protect on every retreat.
+                The principles that guide every retreat decision.
               </h2>
             </div>
           </Reveal>

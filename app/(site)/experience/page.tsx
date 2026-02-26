@@ -14,28 +14,28 @@ const PILLARS = [
   {
     num: '01',
     title: 'Reset',
-    body: 'Recovery is planned, not accidental. Afternoons are intentionally open for the pool, a walk, a nap, or quiet time.',
+    body: 'Mornings have movement. Afternoons have space. Pool, walk, nap, or nothing at all, without needing to justify it.',
     img: brandImagery.experience.rest.src,
     alt: brandImagery.experience.rest.alt,
   },
   {
     num: '02',
     title: 'Community',
-    body: 'At 12 guests, the group stays personal. You actually get to know people and leave with real connection.',
+    body: 'Small groups change everything. You remember names quickly, settle in fast, and leave with people you would run with again.',
     img: brandImagery.experience.company.src,
     alt: brandImagery.experience.company.alt,
   },
   {
     num: '03',
     title: 'The Table',
-    body: 'Meals are shared, unhurried, and prepared properly, with enough time for conversation to actually happen.',
+    body: 'Meals are a real part of the retreat: good food, enough time, and long conversations that are never rushed.',
     img: brandImagery.experience.table.src,
     alt: brandImagery.experience.table.alt,
   },
   {
     num: '04',
     title: 'The Running',
-    body: 'Guided runs are grouped by conversational effort. You choose distance within route options. No race-day tone.',
+    body: 'Guided routes are paced by conversational effort. You choose your distance window. No race-day atmosphere.',
     img: brandImagery.experience.running.src,
     alt: brandImagery.experience.running.alt,
   },
@@ -106,10 +106,10 @@ export default function ExperiencePage() {
       </section>
 
       {/* ── FOUR PILLARS ──────────────────────────────────────────────────── */}
-      <section className="py-24 md:py-36">
+      <section className="py-20 md:py-30">
         <div className="mx-auto max-w-7xl px-6 md:px-12">
           <Reveal>
-            <div className="mb-20">
+            <div className="mb-14">
               <p className="font-ui mb-5 text-xs font-medium uppercase tracking-[0.2em] text-[var(--site-text-muted)]">
                 What we get right
               </p>
@@ -119,23 +119,23 @@ export default function ExperiencePage() {
             </div>
           </Reveal>
 
-          <div className="space-y-24 md:space-y-32">
+          <div className="space-y-16 md:space-y-20">
             {PILLARS.map((pillar, i) => (
               <Reveal key={pillar.num} delay={0.1}>
                 <div
-                  className={`grid grid-cols-1 items-center gap-16 lg:grid-cols-2 lg:gap-24`}
+                  className={`grid grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-14`}
                 >
                   <div className={i % 2 === 1 ? 'order-1 lg:order-2' : ''}>
-                    <p className="font-ui mb-4 text-xs font-medium tracking-[0.25em] text-[var(--site-text-muted)]">
+                    <p className="font-ui mb-3 text-xs font-medium tracking-[0.25em] text-[var(--site-text-muted)]">
                       {pillar.num}
                     </p>
-                    <h2 className="mb-6 font-serif text-3xl font-bold text-[var(--site-text-primary)] md:text-4xl">
+                    <h2 className="mb-4 font-serif text-3xl font-bold text-[var(--site-text-primary)] md:text-4xl">
                       {pillar.title}
                     </h2>
-                    <p className="text-lg leading-relaxed text-[var(--site-text-body)]">{pillar.body}</p>
+                    <p className="text-base leading-relaxed text-[var(--site-text-body)] md:text-lg">{pillar.body}</p>
                   </div>
                   <div className={i % 2 === 1 ? 'order-2 lg:order-1' : ''}>
-                    <div className="relative aspect-[4/3] w-full overflow-hidden rounded-sm">
+                    <div className="relative aspect-[16/10] w-full overflow-hidden rounded-sm">
                       <Image
                         src={pillar.img}
                         alt={pillar.alt}
@@ -181,7 +181,7 @@ export default function ExperiencePage() {
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:auto-rows-fr">
             {PROGRAMME.map((day, i) => (
               <Reveal key={day.day} delay={i * 0.1}>
-                <div className={`h-full p-8 ${i % 2 === 0 ? 'bg-[var(--site-surface-soft)]' : 'bg-[var(--site-accent-strong)]/5'}`}>
+                <div className={`h-full p-8 ${i % 2 === 0 ? 'bg-[var(--site-surface-soft)]' : 'bg-[color:var(--site-cta-soft)]'}`}>
                   <h3 className="mb-6 font-serif text-2xl font-bold text-[var(--site-text-primary)]">{day.day}</h3>
                   <div className="flex h-[calc(100%-3.5rem)] flex-col justify-start space-y-4">
                     {day.events.map((event) => (
