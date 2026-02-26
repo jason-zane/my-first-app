@@ -1,22 +1,26 @@
 'use client'
 
+import Link from 'next/link'
 import { motion } from 'framer-motion'
 
 const DEFAULT_ITEMS = [
-  'Miles Between',
-  'Southern Highlands',
-  '24–27 September 2026',
-  '12 Guests',
-  'Bargo, NSW',
-  'Nattai National Park',
-  'From $5,899',
+  'Miles Between Retreats',
+  'Small Group Experiences',
+  'Trail Running + Recovery',
+  'New Dates Announced First',
+  'Explore Current Retreats',
+  'Join the Retreat List',
 ]
 
-export function Marquee({ items = DEFAULT_ITEMS }: { items?: string[] }) {
+export function Marquee({ items = DEFAULT_ITEMS, href = '/retreats' }: { items?: string[]; href?: string }) {
   const all = [...items, ...items, ...items]
 
   return (
-    <div className="overflow-hidden border-y border-[#FAF8F4]/10 bg-[#2C4A3E] py-3.5">
+    <Link
+      href={href}
+      className="block overflow-hidden border-y border-[color:var(--site-on-dark-primary)]/10 bg-[var(--site-accent-strong)] py-3.5 transition-colors hover:bg-[var(--site-cta-bg)]"
+      aria-label="View retreat pages"
+    >
       <motion.div
         className="flex whitespace-nowrap"
         animate={{ x: ['0%', '-33.333%'] }}
@@ -25,13 +29,13 @@ export function Marquee({ items = DEFAULT_ITEMS }: { items?: string[] }) {
         {all.map((item, i) => (
           <span
             key={i}
-            className="inline-flex items-center gap-5 px-2 text-xs font-medium uppercase tracking-[0.2em] text-[#A8C4B8]"
+            className="font-ui inline-flex items-center gap-5 px-2 text-xs font-medium uppercase tracking-[0.2em] text-[var(--site-on-dark-muted)]"
           >
             {item}
             <span className="opacity-30">·</span>
           </span>
         ))}
       </motion.div>
-    </div>
+    </Link>
   )
 }

@@ -7,8 +7,8 @@ export type CreateInterestSubmissionInput = {
   source: string | null
   formKey?: string
   schemaVersion?: number
-  answers: Record<string, string | number | null>
-  rawPayload: Record<string, string | number | null>
+  answers: Record<string, string | number | boolean | null>
+  rawPayload: Record<string, string | number | boolean | null>
   reviewStatus?: 'pending_review' | 'approved' | 'changes_requested'
   priority?: 'low' | 'normal' | 'high'
   ipAddress: string | null

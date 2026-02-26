@@ -1,4 +1,4 @@
-import { Playfair_Display, Lora } from 'next/font/google'
+import { Playfair_Display, Lora, Inter } from 'next/font/google'
 import { SiteNav } from '@/components/site/site-nav'
 import { SiteFooter } from '@/components/site/site-footer'
 
@@ -14,9 +14,15 @@ const lora = Lora({
   display: 'swap',
 })
 
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+})
+
 export default function SiteLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className={`${playfair.variable} ${lora.variable} font-lora`}>
+    <div className={`${playfair.variable} ${lora.variable} ${inter.variable} site-theme-v1 font-lora`}>
       <SiteNav />
       <main>{children}</main>
       <SiteFooter />

@@ -3,10 +3,10 @@ import { Toaster } from 'sonner'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: "Miles Between — Running Retreats",
+  title: 'Miles Between | Running Retreats',
   description:
-    "Escape the everyday. Run through stunning landscapes. Connect with like-minded people. Miles Between is a running retreat for people who love the journey.",
-};
+    'Small-group running retreats with guided trail routes, thoughtful recovery time, and strong shared-table culture.',
+}
 
 export default function RootLayout({
   children,

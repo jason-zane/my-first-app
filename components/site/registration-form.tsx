@@ -1,7 +1,9 @@
 'use client'
 
+import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import { trackSiteEvent } from '@/utils/analytics'
+import { siteButtonClasses } from '@/utils/brand/site-brand'
 
 type RegistrationMode = 'general' | 'retreat'
 
@@ -130,7 +132,7 @@ function ChoiceGroup({
 }) {
   return (
     <fieldset>
-      <legend className="mb-2 block text-sm font-medium text-stone-700">{label}</legend>
+      <legend className="mb-2 block font-ui text-sm font-medium text-[var(--site-text-body)]">{label}</legend>
       <div className="flex flex-wrap gap-2">
         {options.map((option) => {
           const selected = value === option
@@ -141,8 +143,8 @@ function ChoiceGroup({
               onClick={() => onChange(option)}
               className={`rounded-full border px-3 py-2 text-sm transition-colors ${
                 selected
-                  ? 'border-[#2C4A3E] bg-[#2C4A3E] text-[#FAF8F4]'
-                  : 'border-stone-300 bg-white text-stone-700 hover:border-stone-400'
+                  ? 'border-[var(--site-cta-bg)] bg-[var(--site-cta-bg)] text-[var(--site-cta-text)]'
+                  : 'border-[var(--site-border)] bg-[var(--site-surface-elevated)] text-[var(--site-text-body)] hover:border-[var(--site-accent)]'
               }`}
               aria-pressed={selected}
             >
@@ -172,6 +174,7 @@ export function RegistrationForm({
   const [ageRange, setAgeRange] = useState('')
   const [gender, setGender] = useState('')
   const [runnerType, setRunnerType] = useState('')
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
 
   const [showProfile, setShowProfile] = useState(false)
   const [profileSubmitting, setProfileSubmitting] = useState(false)
@@ -201,6 +204,11 @@ export function RegistrationForm({
 
     if (gender === 'Self-describe' && !genderSelfDescribe) {
       setSubmitError('Please add your gender description.')
+      return
+    }
+
+    if (mode === 'retreat' && !acceptedTerms) {
+      setSubmitError('Please accept the terms and conditions to apply.')
       return
     }
 
@@ -241,6 +249,7 @@ export function RegistrationForm({
       setAgeRange('')
       setGender('')
       setRunnerType('')
+      setAcceptedTerms(false)
 
       trackSiteEvent('form_submitted', {
         form_key: formKey,
@@ -304,8 +313,8 @@ export function RegistrationForm({
     return (
       <div className="space-y-6 py-8">
         <div className="text-center">
-          <p className="mb-2 font-serif text-3xl font-bold text-stone-900">Thank you.</p>
-          <p className="text-base text-stone-600">
+          <p className="mb-2 font-serif text-3xl font-bold text-[var(--site-text-primary)]">Thank you.</p>
+          <p className="text-base text-[var(--site-text-body)]">
             You&apos;re on the list. We&apos;ll only send meaningful updates.
           </p>
         </div>
@@ -315,8 +324,8 @@ export function RegistrationForm({
             Thanks for sharing your preferences. This helps us design better retreats for you.
           </p>
         ) : (
-          <div className="rounded border border-stone-200 bg-stone-50 p-4">
-            <p className="mb-3 text-sm text-stone-700">
+          <div className="rounded border border-[var(--site-border-soft)] bg-[var(--site-surface-soft)] p-4">
+            <p className="mb-3 text-sm text-[var(--site-text-body)]">
               Help us tailor future retreats to you. Optional, takes around 60 seconds.
             </p>
 
@@ -324,13 +333,13 @@ export function RegistrationForm({
               <form onSubmit={handleProfileSubmit} className="space-y-4">
                 {PROFILE_SELECTS.map((field) => (
                   <div key={field.id}>
-                    <label htmlFor={field.id} className="mb-1 block text-sm font-medium text-stone-700">
+                    <label htmlFor={field.id} className="mb-1 block font-ui text-sm font-medium text-[var(--site-text-body)]">
                       {field.label}
                     </label>
                     <select
                       id={field.id}
                       name={field.id}
-                      className="w-full border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 focus:border-[#2C4A3E] focus:outline-none"
+                      className="w-full font-ui border border-[var(--site-border)] bg-[var(--site-surface-elevated)] px-3 py-2 text-sm text-[var(--site-text-primary)] focus:border-[var(--site-accent-strong)] focus:outline-none"
                       defaultValue=""
                     >
                       <option value="">Select an option</option>
@@ -344,13 +353,13 @@ export function RegistrationForm({
                 ))}
 
                 <div>
-                  <label htmlFor="budgetRange" className="mb-1 block text-sm font-medium text-stone-700">
+                  <label htmlFor="budgetRange" className="mb-1 block font-ui text-sm font-medium text-[var(--site-text-body)]">
                     What budget range feels realistic for a retreat?
                   </label>
                   <select
                     id="budgetRange"
                     name="budgetRange"
-                    className="w-full border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 focus:border-[#2C4A3E] focus:outline-none"
+                    className="w-full font-ui border border-[var(--site-border)] bg-[var(--site-surface-elevated)] px-3 py-2 text-sm text-[var(--site-text-primary)] focus:border-[var(--site-accent-strong)] focus:outline-none"
                     defaultValue=""
                   >
                     <option value="">Select an option</option>
@@ -363,14 +372,14 @@ export function RegistrationForm({
                 </div>
 
                 <div>
-                  <label htmlFor="whatWouldMakeItGreat" className="mb-1 block text-sm font-medium text-stone-700">
+                  <label htmlFor="whatWouldMakeItGreat" className="mb-1 block font-ui text-sm font-medium text-[var(--site-text-body)]">
                     What would make this an exceptional retreat for you?
                   </label>
                   <textarea
                     id="whatWouldMakeItGreat"
                     name="whatWouldMakeItGreat"
                     rows={3}
-                    className="w-full border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 focus:border-[#2C4A3E] focus:outline-none"
+                    className="w-full font-ui border border-[var(--site-border)] bg-[var(--site-surface-elevated)] px-3 py-2 text-sm text-[var(--site-text-primary)] focus:border-[var(--site-accent-strong)] focus:outline-none"
                     placeholder="Optional"
                   />
                 </div>
@@ -381,7 +390,7 @@ export function RegistrationForm({
                   <button
                     type="submit"
                     disabled={profileSubmitting}
-                    className="rounded bg-[#2C4A3E] px-4 py-2 text-sm font-medium text-[#FAF8F4] hover:bg-[#1E3530] disabled:opacity-60"
+                    className={`rounded px-4 py-2 text-sm font-medium disabled:opacity-60 ${siteButtonClasses.primary}`}
                   >
                     {profileSubmitting ? 'Submitting...' : 'Submit Optional Profile'}
                   </button>
@@ -395,7 +404,7 @@ export function RegistrationForm({
                         place: 'inline_form',
                       })
                     }}
-                    className="rounded border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-100"
+                    className={`rounded px-4 py-2 text-sm font-medium ${siteButtonClasses.outlineLight}`}
                   >
                     Skip for now
                   </button>
@@ -412,7 +421,7 @@ export function RegistrationForm({
                       page_type: mode,
                     })
                   }}
-                  className="rounded bg-[#2C4A3E] px-4 py-2 text-sm font-medium text-[#FAF8F4] hover:bg-[#1E3530]"
+                  className={`rounded px-4 py-2 text-sm font-medium ${siteButtonClasses.primary}`}
                 >
                   Help shape future retreats
                 </button>
@@ -425,7 +434,7 @@ export function RegistrationForm({
                       place: 'success_state',
                     })
                   }}
-                  className="rounded border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-100"
+                  className={`rounded px-4 py-2 text-sm font-medium ${siteButtonClasses.outlineLight}`}
                 >
                   Skip for now
                 </button>
@@ -455,7 +464,7 @@ export function RegistrationForm({
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <div>
-          <label htmlFor={`${formKey}-firstName`} className="mb-2 block text-sm font-medium text-stone-700">
+          <label htmlFor={`${formKey}-firstName`} className="mb-2 block font-ui text-sm font-medium text-[var(--site-text-body)]">
             First Name <span className="text-red-500">*</span>
           </label>
           <input
@@ -463,11 +472,11 @@ export function RegistrationForm({
             name="firstName"
             type="text"
             required
-            className="w-full border border-stone-300 bg-white px-4 py-3 text-sm text-stone-900 focus:border-[#2C4A3E] focus:outline-none"
+            className="w-full font-ui border border-[var(--site-border)] bg-[var(--site-surface-elevated)] px-4 py-3 text-sm text-[var(--site-text-primary)] focus:border-[var(--site-accent-strong)] focus:outline-none"
           />
         </div>
         <div>
-          <label htmlFor={`${formKey}-lastName`} className="mb-2 block text-sm font-medium text-stone-700">
+          <label htmlFor={`${formKey}-lastName`} className="mb-2 block font-ui text-sm font-medium text-[var(--site-text-body)]">
             Last Name <span className="text-red-500">*</span>
           </label>
           <input
@@ -475,13 +484,13 @@ export function RegistrationForm({
             name="lastName"
             type="text"
             required
-            className="w-full border border-stone-300 bg-white px-4 py-3 text-sm text-stone-900 focus:border-[#2C4A3E] focus:outline-none"
+            className="w-full font-ui border border-[var(--site-border)] bg-[var(--site-surface-elevated)] px-4 py-3 text-sm text-[var(--site-text-primary)] focus:border-[var(--site-accent-strong)] focus:outline-none"
           />
         </div>
       </div>
 
       <div>
-        <label htmlFor={`${formKey}-email`} className="mb-2 block text-sm font-medium text-stone-700">
+        <label htmlFor={`${formKey}-email`} className="mb-2 block font-ui text-sm font-medium text-[var(--site-text-body)]">
           Email <span className="text-red-500">*</span>
         </label>
         <input
@@ -491,7 +500,7 @@ export function RegistrationForm({
           required
           autoComplete="email"
           onChange={(e) => setEmailValue(e.target.value.trim().toLowerCase())}
-          className="w-full border border-stone-300 bg-white px-4 py-3 text-sm text-stone-900 focus:border-[#2C4A3E] focus:outline-none"
+          className="w-full font-ui border border-[var(--site-border)] bg-[var(--site-surface-elevated)] px-4 py-3 text-sm text-[var(--site-text-primary)] focus:border-[var(--site-accent-strong)] focus:outline-none"
         />
       </div>
 
@@ -515,7 +524,7 @@ export function RegistrationForm({
         <div>
           <label
             htmlFor={`${formKey}-gender-self-describe`}
-            className="mb-2 block text-sm font-medium text-stone-700"
+            className="mb-2 block font-ui text-sm font-medium text-[var(--site-text-body)]"
           >
             Please describe your gender <span className="text-red-500">*</span>
           </label>
@@ -524,7 +533,7 @@ export function RegistrationForm({
             name="genderSelfDescribe"
             type="text"
             required
-            className="w-full border border-stone-300 bg-white px-4 py-3 text-sm text-stone-900 focus:border-[#2C4A3E] focus:outline-none"
+            className="w-full font-ui border border-[var(--site-border)] bg-[var(--site-surface-elevated)] px-4 py-3 text-sm text-[var(--site-text-primary)] focus:border-[var(--site-accent-strong)] focus:outline-none"
           />
         </div>
       ) : null}
@@ -538,7 +547,7 @@ export function RegistrationForm({
       />
 
       <div>
-        <label htmlFor={`${formKey}-location`} className="mb-2 block text-sm font-medium text-stone-700">
+        <label htmlFor={`${formKey}-location`} className="mb-2 block font-ui text-sm font-medium text-[var(--site-text-body)]">
           Your location <span className="text-red-500">*</span>
         </label>
         <input
@@ -547,18 +556,18 @@ export function RegistrationForm({
           type="text"
           required
           placeholder="City / region"
-          className="w-full border border-stone-300 bg-white px-4 py-3 text-sm text-stone-900 focus:border-[#2C4A3E] focus:outline-none"
+          className="w-full font-ui border border-[var(--site-border)] bg-[var(--site-surface-elevated)] px-4 py-3 text-sm text-[var(--site-text-primary)] focus:border-[var(--site-accent-strong)] focus:outline-none"
         />
       </div>
 
       <div>
-        <label htmlFor={`${formKey}-source`} className="mb-2 block text-sm font-medium text-stone-700">
+        <label htmlFor={`${formKey}-source`} className="mb-2 block font-ui text-sm font-medium text-[var(--site-text-body)]">
           How did you hear about us?
         </label>
         <select
           id={`${formKey}-source`}
           name="source"
-          className="w-full border border-stone-300 bg-white px-4 py-3 text-sm text-stone-900 focus:border-[#2C4A3E] focus:outline-none"
+          className="w-full font-ui border border-[var(--site-border)] bg-[var(--site-surface-elevated)] px-4 py-3 text-sm text-[var(--site-text-primary)] focus:border-[var(--site-accent-strong)] focus:outline-none"
           defaultValue={defaultSource.startsWith('retreat:') || defaultSource.startsWith('site:') ? '' : defaultSource}
         >
           <option value="">Select an option</option>
@@ -570,6 +579,40 @@ export function RegistrationForm({
         </select>
       </div>
 
+      <div className="space-y-3 rounded border border-[var(--site-border-soft)] bg-[var(--site-surface-soft)] p-4">
+        <label className="flex items-start gap-3 text-sm text-[var(--site-text-body)]">
+          <input
+            type="checkbox"
+            name="marketingOptIn"
+            value="1"
+            className="mt-1 h-4 w-4 border-[var(--site-border)]"
+          />
+          <span>
+            I&apos;d like to receive occasional Miles Between updates and retreat announcements.
+          </span>
+        </label>
+
+        {mode === 'retreat' ? (
+          <label className="flex items-start gap-3 text-sm text-[var(--site-text-body)]">
+            <input
+              type="checkbox"
+              name="acceptedTerms"
+              checked={acceptedTerms}
+              onChange={(e) => setAcceptedTerms(e.target.checked)}
+              className="mt-1 h-4 w-4 border-[var(--site-border)]"
+              required
+            />
+            <span>
+              I agree to the{' '}
+              <Link href="/terms-and-conditions" target="_blank" className="underline hover:no-underline">
+                Terms and Conditions
+              </Link>
+              .
+            </span>
+          </label>
+        ) : null}
+      </div>
+
       {mode === 'retreat' && retreatSlug ? <input type="hidden" name="retreatSlug" value={retreatSlug} /> : null}
       {mode === 'retreat' && retreatName ? <input type="hidden" name="retreatName" value={retreatName} /> : null}
 
@@ -578,12 +621,12 @@ export function RegistrationForm({
       <button
         type="submit"
         disabled={isSubmitting}
-        className="w-full bg-[#2C4A3E] py-4 text-sm font-medium text-[#FAF8F4] transition-colors hover:bg-[#1E3530] disabled:opacity-60"
+        className={`w-full py-4 text-sm font-medium transition-colors disabled:opacity-60 ${siteButtonClasses.primary}`}
       >
         {isSubmitting ? 'Submitting...' : (submitCtaLabel ?? 'Register Interest in 60 Seconds')}
       </button>
 
-      <p className="text-center text-xs text-stone-400">
+      <p className="text-center text-xs text-[var(--site-text-muted)]">
         We&apos;ll only send relevant retreat updates and planning invites.
       </p>
     </form>

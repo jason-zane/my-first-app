@@ -1,3 +1,5 @@
+import { brandImagery } from '@/utils/brand/imagery'
+
 export type Route = {
   name: string
   distance: string
@@ -33,6 +35,7 @@ export type Retreat = {
   heroImageAlt: string
   venueImage: string
   venueImageAlt: string
+  venueGallery?: Array<{ src: string; alt: string }>
   description: string
   venueName: string
   venueDescription: string
@@ -48,7 +51,7 @@ export const retreats: Retreat[] = [
   {
     slug: 'sydney-southern-highlands',
     name: 'The Southern Highlands',
-    tagline: '90 minutes from Sydney. A world away from it.',
+    tagline: 'Ninety minutes from Sydney, and a full mental reset.',
     location: 'Bargo, NSW',
     region: 'Southern Highlands',
     distanceFromCity: '~90 min drive from Sydney CBD',
@@ -57,23 +60,39 @@ export const retreats: Retreat[] = [
     capacity: 12,
     priceFrom: 5899,
     deposit: 500,
-    heroImage:
-      'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=2400&q=80',
-    heroImageAlt: 'Dramatic highland landscape at dawn',
-    venueImage:
-      'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80',
-    venueImageAlt: 'Country estate exterior with gardens',
+    heroImage: brandImagery.retreats.southernHighlandsHero.src,
+    heroImageAlt: brandImagery.retreats.southernHighlandsHero.alt,
+    venueImage: brandImagery.retreats.southernHighlandsVenue.src,
+    venueImageAlt: brandImagery.retreats.southernHighlandsVenue.alt,
+    venueGallery: [
+      {
+        src: brandImagery.retreats.southernHighlandsVenue.src,
+        alt: brandImagery.retreats.southernHighlandsVenue.alt,
+      },
+      {
+        src: 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=1200&q=80',
+        alt: 'Boutique retreat bedroom with warm natural styling',
+      },
+      {
+        src: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=1200&q=80',
+        alt: 'Outdoor pool and deck with trees surrounding the property',
+      },
+      {
+        src: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1200&q=80',
+        alt: 'Shared lounge area for relaxing between activities',
+      },
+    ],
     description:
-      'Three nights in an award-winning colonial estate at the foot of the Southern Highlands escarpment. Three guided runs through Nattai National Park. Exceptional food, a heated pool, and the kind of evenings that make you glad you came.',
+      'Three nights in a private estate near Nattai National Park. Guided trail runs each morning, open recovery blocks each afternoon, and shared dinners every evening.',
     venueName: 'Kalinya Estate',
     venueDescription:
-      "An extraordinary colonial homestead set across 6 acres of award-winning gardens in Bargo, NSW. Kalinya is the exclusive preserve of your group for the full three nights — two buildings, The Homestead and The Lodge, sleeping 12 guests in private rooms. Wander the gardens, swim in the 17-metre heated pool, or ease into the therapeutic spa after a long run. The estate sits at the edge of Nattai National Park, which unfolds into some of the finest trail running terrain within reach of Sydney.",
+      'A private country estate in Bargo with room for the full retreat group. Two buildings, private rooms, gardens, pool, and spa. Close access to varied trails means less travel time and more time actually running.',
     venueHighlights: [
       '6-acre estate with award-winning gardens',
       '17-metre heated swimming pool',
       'Therapeutic spa',
-      'Two buildings: The Homestead & The Lodge',
-      'Exclusive use — your group only',
+      'Two buildings: The Homestead and The Lodge',
+      'Exclusive use for retreat guests only',
       'Tennis court and outdoor recreation areas',
     ],
     routes: [
@@ -83,7 +102,7 @@ export const retreats: Retreat[] = [
         terrain: 'Single trail, sandstone track, river flats',
         elevation: '250–350 m gain',
         description:
-          "Saturday's morning run takes you into Nattai National Park through wild heathland, sandstone outcrops and river flats. Two paced groups depart together and regroup at natural waypoints — choose how far you run.",
+          'A rolling trail loop through heathland and river sections with two distance options depending on your pace and morning energy.',
       },
       {
         name: 'The Escarpment',
@@ -91,7 +110,7 @@ export const retreats: Retreat[] = [
         terrain: 'Technical trail, ridgeline, fire road sections',
         elevation: '500–700 m gain',
         description:
-          'The signature route. A long climb onto the escarpment rewards you with panoramic views across the Wollondilly valley. Two options: turn at the ridge for 15 km, or continue for the full 25. Both finish in style.',
+          'The longest route of the weekend. Climbing sections, open ridgeline views, and optional turn points so you can hold conversational effort.',
       },
       {
         name: 'Estate Morning',
@@ -99,7 +118,7 @@ export const retreats: Retreat[] = [
         terrain: 'Estate paths and quiet country lanes',
         elevation: 'Flat to gentle',
         description:
-          "An easy sunrise run through the estate grounds and surrounding lanes before Monday's farewell breakfast. No watch required.",
+          'An easy final run through estate tracks and nearby lanes before breakfast and departure.',
       },
     ],
     itinerary: [
@@ -109,8 +128,8 @@ export const retreats: Retreat[] = [
         events: [
           { time: '9:00 am', label: 'Coach departs Sydney CBD' },
           { time: '12:00 pm', label: 'Arrive at Kalinya Estate, settle in, lunch' },
-          { time: '3:00 pm', label: 'Meet & Greet — first introductions over coffee' },
-          { time: '6:00 pm', label: 'Welcome dinner — long table, family style' },
+          { time: '3:00 pm', label: 'Arrival coffee and group introductions' },
+          { time: '6:00 pm', label: 'Welcome dinner, long table style' },
           { time: '8:30 pm', label: 'Sunset walk through the gardens' },
         ],
       },
@@ -118,11 +137,11 @@ export const retreats: Retreat[] = [
         day: 'Friday',
         date: '25 September',
         events: [
-          { time: '6:00 am', label: 'Pre-run coffee, then morning run — The Nattai Circuit (10–18 km)' },
+          { time: '6:00 am', label: 'Pre-run coffee, then morning run: The Nattai Circuit (10–18 km)' },
           { time: '8:30 am', label: 'Return to estate, showers, full breakfast' },
-          { time: '9:30 am', label: 'Running brand session — kit, gear, what actually matters' },
+          { time: '9:30 am', label: 'Practical session: kit, shoes, trail prep' },
           { time: '12:00 pm', label: 'Lunch' },
-          { time: '3:00 pm', label: 'Free time — pool, spa, gardens, tennis' },
+          { time: '3:00 pm', label: 'Open afternoon: pool, spa, gardens, tennis' },
           { time: '6:00 pm', label: 'Dinner with nutrition session' },
         ],
       },
@@ -130,20 +149,20 @@ export const retreats: Retreat[] = [
         day: 'Saturday',
         date: '26 September',
         events: [
-          { time: '6:00 am', label: 'Pre-run coffee, then long run — The Escarpment (15–25 km)' },
-          { time: '9:00 am', label: 'Guest-led session — special run or talk' },
+          { time: '6:00 am', label: 'Pre-run coffee, then long run: The Escarpment (15–25 km)' },
+          { time: '9:00 am', label: 'Guest session or extra guided route option' },
           { time: '11:30 am', label: 'Late brunch' },
-          { time: '3:00 pm', label: 'Free afternoon — pool, spa, rest, games' },
-          { time: '6:00 pm', label: 'Pizza night — casual dinner, long evening' },
+          { time: '3:00 pm', label: 'Open afternoon: pool, spa, rest, games' },
+          { time: '6:00 pm', label: 'Casual long-table dinner' },
         ],
       },
       {
         day: 'Sunday',
         date: '27 September',
         events: [
-          { time: '6:00 am', label: 'Optional sunrise run — Estate Morning (5–8 km)' },
+          { time: '6:00 am', label: 'Optional sunrise run: Estate Morning (5–8 km)' },
           { time: '8:00 am', label: 'Farewell breakfast' },
-          { time: '9:30 am', label: '"I want to do this again" — closing session' },
+          { time: '9:30 am', label: 'Closing session and next retreat preview' },
           { time: '12:00 pm', label: 'Farewell lunch' },
           { time: '3:00 pm', label: 'Coach departs for Sydney' },
         ],
@@ -161,7 +180,7 @@ export const retreats: Retreat[] = [
       'Transport to and from trailheads',
     ],
     notIncluded: [
-      'Transport to/from Bargo (Sydney coach available — $65 return)',
+      'Transport to/from Bargo (Sydney coach available, $65 return)',
       'Wine and alcoholic beverages',
       'Travel insurance',
       'Personal running gear or equipment',

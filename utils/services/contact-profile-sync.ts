@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-type AnswerValue = string | number | null | undefined
+type AnswerValue = string | number | boolean | null | undefined
 
 type SyncInput = {
   contactId: string

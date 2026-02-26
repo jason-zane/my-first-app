@@ -55,6 +55,17 @@ export function CogIcon({ className }: { className?: string }) {
   )
 }
 
+export function GlobeIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="8" cy="8" r="6" />
+      <path d="M2.5 8h11" />
+      <path d="M8 2a9 9 0 010 12" />
+      <path d="M8 2a9 9 0 000 12" />
+    </svg>
+  )
+}
+
 export function DotsVerticalIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 16 16" fill="currentColor">

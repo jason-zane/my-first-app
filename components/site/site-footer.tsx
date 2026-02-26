@@ -1,19 +1,21 @@
 import Link from 'next/link'
+import { siteButtonClasses, siteTextClasses } from '@/utils/brand/site-brand'
+import { CONTACT_EMAIL_LABEL, MAILTO_GENERAL } from '@/utils/brand/contact'
 
 export function SiteFooter() {
   return (
-    <footer className="bg-[#2C4A3E] py-16">
+    <footer className="bg-[var(--site-accent-strong)] py-16">
       <div className="mx-auto max-w-7xl px-6 md:px-12">
         <div className="grid grid-cols-1 gap-12 md:grid-cols-3">
           <div>
-            <p className="mb-3 font-serif text-2xl font-bold text-[#FAF8F4]">Miles Between</p>
-            <p className="text-sm leading-relaxed text-[#7A9E8E]">
-              Running retreats for people who love the journey.
+            <p className="mb-3 font-serif text-2xl font-bold text-[var(--site-on-dark-primary)]">Miles Between</p>
+            <p className="text-sm leading-relaxed text-[var(--site-text-secondary)]">
+              Running retreats for people who love running.
             </p>
           </div>
 
           <div>
-            <p className="mb-4 text-xs font-medium uppercase tracking-[0.2em] text-[#7A9E8E]">
+            <p className={`mb-4 text-[var(--site-text-secondary)] ${siteTextClasses.eyebrow}`}>
               Explore
             </p>
             <nav className="flex flex-col gap-3">
@@ -22,11 +24,12 @@ export function SiteFooter() {
                 { href: '/experience', label: 'The Experience' },
                 { href: '/about', label: 'About' },
                 { href: '/faq', label: 'FAQ' },
+                { href: '/terms-and-conditions', label: 'Terms' },
               ].map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="text-sm text-[#A8C4B8] transition-colors hover:text-[#FAF8F4]"
+                  className="font-ui text-sm tracking-[0.02em] text-[var(--site-on-dark-muted)] transition-colors hover:text-[var(--site-on-dark-primary)]"
                 >
                   {link.label}
                 </Link>
@@ -35,19 +38,19 @@ export function SiteFooter() {
           </div>
 
           <div>
-            <p className="mb-4 text-xs font-medium uppercase tracking-[0.2em] text-[#7A9E8E]">
+            <p className={`mb-4 text-[var(--site-text-secondary)] ${siteTextClasses.eyebrow}`}>
               Get in touch
             </p>
             <Link
-              href="mailto:hello@milesbetween.com.au"
-              className="text-sm text-[#A8C4B8] transition-colors hover:text-[#FAF8F4]"
+              href={MAILTO_GENERAL}
+              className="font-ui text-sm tracking-[0.02em] text-[var(--site-on-dark-muted)] transition-colors hover:text-[var(--site-on-dark-primary)]"
             >
-              hello@milesbetween.com.au
+              {CONTACT_EMAIL_LABEL}
             </Link>
             <div className="mt-4">
               <Link
                 href="/#register"
-                className="inline-block border border-[#FAF8F4]/50 px-4 py-2 text-xs font-medium uppercase tracking-[0.12em] text-[#FAF8F4] transition-colors hover:bg-[#FAF8F4] hover:text-[#2C4A3E]"
+                className={`inline-block px-4 py-2 text-xs font-medium uppercase tracking-[0.12em] transition-colors ${siteButtonClasses.outlineDark}`}
               >
                 Join Retreat List
               </Link>
@@ -55,8 +58,8 @@ export function SiteFooter() {
           </div>
         </div>
 
-        <div className="mt-12 border-t border-[#FAF8F4]/10 pt-8 text-center">
-          <p className="text-xs text-[#7A9E8E]">
+        <div className="mt-12 border-t border-[color:var(--site-on-dark-primary)]/10 pt-8 text-center">
+          <p className="text-xs text-[var(--site-text-secondary)]">
             © {new Date().getFullYear()} Miles Between. All rights reserved.
           </p>
         </div>

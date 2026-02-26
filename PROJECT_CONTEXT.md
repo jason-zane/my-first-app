@@ -16,6 +16,15 @@ npm run build
 ## Notes
 Environment variables are stored in .env.local
 
+## Brand System (Public Site)
+- Brand source of truth: `docs/brand-guidelines.md`
+- Tone of voice source: `docs/tone-of-voice.md`
+- PR checklist: `docs/brand-checklist.md`
+- Typed brand config: `utils/brand/brand-guidelines.ts`
+- Shared brand helpers: `utils/brand/site-brand.ts`
+- Curated imagery registry: `utils/brand/imagery.ts`
+- Color tokens live in `app/globals.css` under `.site-theme-v1`
+
 You are acting as a senior software engineer working in an existing production codebase.
 
 Rules:

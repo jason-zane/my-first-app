@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Reveal } from '@/components/site/reveal'
+import { MAILTO_FAQ } from '@/utils/brand/contact'
 
 const FAQS = [
   {
@@ -11,19 +12,19 @@ const FAQS = [
     questions: [
       {
         q: 'What fitness level do I need?',
-        a: "You should be comfortable running 10–15 km at a conversational pace. We have two paced groups on every guided run, so you can always choose the shorter option. You don't need to be training for anything — you just need to enjoy running.",
+        a: "You should be comfortable running 10–15 km at a conversational pace. We have two paced groups on every guided run, so you can always choose the shorter option. You don't need to be training for anything. You just need to enjoy running.",
       },
       {
         q: 'Do I need trail running experience?',
-        a: "Not specifically. Our routes include single trail and fire roads — nothing highly technical. If you've run on grass, gravel or dirt paths before, you'll be fine. We brief you on the terrain before every run.",
+        a: "Not specifically. Our routes include single trail and fire roads, nothing highly technical. If you've run on grass, gravel or dirt paths before, you'll be fine. We brief you on the terrain before every run.",
       },
       {
         q: 'What if I need to skip a run?',
-        a: "Every session is optional. The estate has a heated pool, a spa, gardens, and a tennis court — there's plenty to do if you'd rather rest. Nobody will make you feel guilty about choosing the spa over a 15 km trail.",
+        a: "Every session is optional. The estate has a heated pool, a spa, gardens, and a tennis court. There is plenty to do if you'd rather rest. Nobody will make you feel guilty about choosing the spa over a 15 km trail.",
       },
       {
         q: 'How fast are the groups?',
-        a: "We split into two groups by comfortable pace — not by speed. The focus is always on the experience of the run, not the time. If you can hold a conversation while running, you're at the right pace.",
+        a: "We split into two groups by comfortable pace, not by speed. The focus is always on the experience of the run, not the time. If you can hold a conversation while running, you're at the right pace.",
       },
     ],
   },
@@ -40,15 +41,15 @@ const FAQS = [
       },
       {
         q: 'How do I get to the estate?',
-        a: "We offer a shared coach departing Sydney CBD on Thursday morning and returning Sunday afternoon — $65 return per person. Alternatively, you're welcome to drive. The estate is in Bargo, NSW, approximately 90 minutes from the city.",
+        a: "We offer a shared coach departing Sydney CBD on Thursday morning and returning Sunday afternoon. It is $65 return per person. Alternatively, you're welcome to drive. The estate is in Bargo, NSW, approximately 90 minutes from the city.",
       },
       {
         q: 'How many people will be there?',
-        a: 'Every retreat is capped at 12 guests. This is intentional — at 12 people, you actually get to know everyone. It also means the estate feels like yours, not like a conference.',
+        a: 'Every retreat is capped at 12 guests. This is intentional. At 12 people, you actually get to know everyone. It also means the estate feels like yours, not like a conference.',
       },
       {
         q: 'What does a typical day look like?',
-        a: 'Early coffee and a run (guided, paced groups), then breakfast. The late morning usually has a session — a talk, a tasting, or a guest. Lunch. A long, unstructured afternoon at the estate. A good dinner. No pressure on any of it.',
+        a: 'Early coffee and a run (guided, paced groups), then breakfast. The late morning usually has a session, such as a talk, a tasting, or a guest. Lunch. A long, unstructured afternoon at the estate. A good dinner. No pressure on any of it.',
       },
     ],
   },
@@ -57,7 +58,7 @@ const FAQS = [
     questions: [
       {
         q: 'Can I come on my own?',
-        a: "Most guests do. The small group format means you quickly feel at home — and the people you meet on a Miles Between retreat tend to become people you stay in touch with.",
+        a: "Most guests do. The small group format means you quickly feel at home, and the people you meet on a Miles Between retreat tend to become people you stay in touch with.",
       },
       {
         q: 'Can I come with a friend or partner?',
@@ -65,7 +66,7 @@ const FAQS = [
       },
       {
         q: "What's the age range?",
-        a: "We don't have age restrictions. In practice, guests tend to be in their 30s to 50s — active people with full lives who want to do something genuinely restorative. That said, if running is your thing, you're welcome.",
+        a: "We don't have age restrictions. In practice, guests tend to be in their 30s to 50s, active people with full lives who want to do something genuinely restorative. That said, if running is your thing, you're welcome.",
       },
       {
         q: 'Do you cater for dietary requirements?',
@@ -86,7 +87,7 @@ const FAQS = [
       },
       {
         q: 'Is there a waitlist?',
-        a: "Yes. If the retreat is full when you register, we'll add you to the waitlist and reach out if a place opens up. We recommend registering early — these retreats fill quickly.",
+        a: "Yes. If the retreat is full when you register, we'll add you to the waitlist and reach out if a place opens up. We recommend registering early. These retreats fill quickly.",
       },
       {
         q: "What's the cancellation policy?",
@@ -94,7 +95,7 @@ const FAQS = [
       },
       {
         q: 'Can I transfer my place to someone else?',
-        a: "Yes, with notice. If you need to cancel, let us know as early as possible — we may be able to transfer your place to a waitlisted guest or, with your consent, a person of your choosing.",
+        a: "Yes, with notice. If you need to cancel, let us know as early as possible. We may be able to transfer your place to a waitlisted guest or, with your consent, a person of your choosing.",
       },
     ],
   },
@@ -104,17 +105,17 @@ function FaqItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false)
 
   return (
-    <div className="border-b border-stone-200">
+    <div className="border-b border-[var(--site-border-soft)]">
       <button
         onClick={() => setOpen(!open)}
         aria-expanded={open}
         className="flex w-full items-start justify-between gap-6 py-5 text-left"
       >
-        <span className="font-medium text-stone-900">{q}</span>
+        <span className="font-medium text-[var(--site-text-primary)]">{q}</span>
         <motion.span
           animate={{ rotate: open ? 45 : 0 }}
           transition={{ duration: 0.22, ease: [0.21, 0.47, 0.32, 0.98] }}
-          className="mt-0.5 shrink-0 text-[#2C4A3E]"
+          className="mt-0.5 shrink-0 text-[var(--site-accent-strong)]"
         >
           <svg
             className="h-5 w-5"
@@ -136,7 +137,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
             transition={{ duration: 0.32, ease: [0.21, 0.47, 0.32, 0.98] }}
             className="overflow-hidden"
           >
-            <p className="pb-6 leading-relaxed text-stone-600">{a}</p>
+            <p className="pb-6 leading-relaxed text-[var(--site-text-body)]">{a}</p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -146,26 +147,25 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 
 export default function FaqPage() {
   return (
-    <div className="bg-[#FAF8F4] text-stone-900">
+    <div className="bg-[var(--site-bg)] text-[var(--site-text-primary)]">
       {/* ── HEADER ────────────────────────────────────────────────────────── */}
-      <section className="bg-[#2C4A3E] pt-40 pb-24 md:pt-52 md:pb-32">
+      <section className="bg-[var(--site-accent-strong)] pt-40 pb-24 md:pt-52 md:pb-32">
         <div className="mx-auto max-w-7xl px-6 md:px-12">
           <Reveal delay={0.1}>
-            <p className="mb-5 text-xs font-medium uppercase tracking-[0.25em] text-[#7A9E8E]">
+            <p className="font-ui mb-5 text-xs font-medium uppercase tracking-[0.25em] text-[var(--site-text-secondary)]">
               FAQ
             </p>
           </Reveal>
           <Reveal delay={0.2}>
-            <h1 className="mb-8 font-serif text-5xl font-bold leading-[1.05] text-[#FAF8F4] md:text-7xl">
-              Questions worth
+            <h1 className="mb-8 font-serif text-5xl font-bold leading-[1.05] text-[var(--site-bg)] md:text-7xl">
+              Useful answers
               <br />
-              <span className="italic">answering.</span>
+              <span className="italic">before you apply.</span>
             </h1>
           </Reveal>
           <Reveal delay={0.35}>
-            <p className="max-w-xl text-lg leading-relaxed text-[#A8C4B8]">
-              Everything you'd want to know before registering. If something's missing, get in
-              touch.
+            <p className="max-w-xl text-lg leading-relaxed text-[var(--site-on-dark-muted)]">
+              The essentials on running level, schedule, logistics, and booking.
             </p>
           </Reveal>
         </div>
@@ -182,7 +182,7 @@ export default function FaqPage() {
                   <li key={section.category}>
                     <a
                       href={`#${section.category.toLowerCase().replace(/\s+/g, '-')}`}
-                      className="block py-1 text-sm text-stone-500 transition-colors hover:text-[#2C4A3E]"
+                      className="font-ui block py-1 text-sm text-[var(--site-text-muted)] transition-colors hover:text-[var(--site-cta-bg)]"
                     >
                       {section.category}
                     </a>
@@ -195,7 +195,7 @@ export default function FaqPage() {
               {FAQS.map((section, si) => (
                 <Reveal key={section.category} delay={si * 0.05}>
                   <div id={section.category.toLowerCase().replace(/\s+/g, '-')}>
-                    <h2 className="mb-8 font-serif text-2xl font-bold text-stone-900">
+                    <h2 className="mb-8 font-serif text-2xl font-bold text-[var(--site-text-primary)]">
                       {section.category}
                     </h2>
                     <div>
@@ -212,28 +212,33 @@ export default function FaqPage() {
       </section>
 
       {/* ── STILL HAVE QUESTIONS ──────────────────────────────────────────── */}
-      <section className="bg-[#EDE8DF] py-20 md:py-24">
+      <section className="bg-[var(--site-surface-alt)] py-20 md:py-24">
         <div className="mx-auto max-w-7xl px-6 md:px-12">
           <Reveal>
             <div className="flex flex-col items-start justify-between gap-8 md:flex-row md:items-center">
               <div>
-                <h2 className="mb-2 font-serif text-3xl font-bold text-stone-900">
-                  Still have questions?
-                </h2>
-                <p className="text-lg text-stone-600">
-                  We're happy to talk it through. Reach out any time.
+                <h2 className="mb-2 font-serif text-3xl font-bold text-[var(--site-text-primary)]">Still need details.</h2>
+                <p className="text-lg text-[var(--site-text-body)]">
+                  If you need specifics about pace, rooms, or travel, email us directly.
+                </p>
+                <p className="mt-2 text-sm text-[var(--site-text-muted)]">
+                  Retreat terms are available{' '}
+                  <Link href="/terms-and-conditions" className="underline hover:no-underline">
+                    here
+                  </Link>
+                  .
                 </p>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Link
-                  href="mailto:hello@milesbetween.com.au"
-                  className="inline-block border border-stone-900 px-7 py-3.5 text-sm font-medium text-stone-900 transition-colors hover:bg-stone-900 hover:text-white"
+                  href={MAILTO_FAQ}
+                  className="font-ui inline-block border border-[var(--site-text-primary)] px-7 py-3.5 text-sm font-medium tracking-[0.02em] text-[var(--site-text-primary)] transition-colors hover:bg-[var(--site-cta-bg)] hover:text-[var(--site-cta-text)]"
                 >
                   Email Us
                 </Link>
                 <Link
                   href="/retreats/sydney-southern-highlands#register"
-                  className="inline-block bg-[#2C4A3E] px-7 py-3.5 text-sm font-medium text-[#FAF8F4] transition-colors hover:bg-[#1E3530]"
+                  className="font-ui inline-block bg-[var(--site-cta-bg)] px-7 py-3.5 text-sm font-medium tracking-[0.02em] text-[var(--site-cta-text)] transition-colors hover:bg-[var(--site-cta-hover-bg)]"
                 >
                   Apply for This Retreat
                 </Link>

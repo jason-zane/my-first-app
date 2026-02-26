@@ -26,6 +26,11 @@ function cleanText(value: FormDataEntryValue | null) {
   return text.length > 0 ? text : null
 }
 
+function parseCheckbox(value: FormDataEntryValue | null) {
+  const normalized = String(value ?? '').trim().toLowerCase()
+  return normalized === '1' || normalized === 'true' || normalized === 'on' || normalized === 'yes'
+}
+
 function parseFormKey(value: string | null) {
   if (!value) return 'register_interest'
   return ALLOWED_FORM_KEYS.has(value) ? value : 'register_interest'
@@ -60,6 +65,10 @@ export async function POST(request: Request) {
     const genderSelfDescribe = cleanText(formData.get('genderSelfDescribe'))
     const runnerType = cleanText(formData.get('runnerType'))
     const locationLabel = cleanText(formData.get('locationLabel')) ?? cleanText(formData.get('city'))
+    const marketingOptIn = parseCheckbox(formData.get('marketingOptIn'))
+    const acceptedTerms = parseCheckbox(formData.get('acceptedTerms'))
+    const acceptedTermsVersion = acceptedTerms ? '2026-02-terms-v1' : null
+    const acceptedTermsAt = acceptedTerms ? new Date().toISOString() : null
 
     const legacyNotes = cleanText(formData.get('notes'))
 
@@ -86,6 +95,13 @@ export async function POST(request: Request) {
       if (formKey === 'retreat_registration_v1' && !retreatSlug) {
         return NextResponse.json({ error: 'Retreat context is required for this form.' }, { status: 400 })
       }
+
+      if (formKey === 'retreat_registration_v1' && !acceptedTerms) {
+        return NextResponse.json(
+          { error: 'Please accept the terms and conditions to apply.' },
+          { status: 400 }
+        )
+      }
     }
 
     const answers = {
@@ -97,9 +113,13 @@ export async function POST(request: Request) {
       retreat_slug: retreatSlug,
       retreat_name: retreatName,
       source,
+      marketing_opt_in: marketingOptIn,
+      accepted_terms: formKey === 'retreat_registration_v1' ? acceptedTerms : null,
+      accepted_terms_version: formKey === 'retreat_registration_v1' ? acceptedTermsVersion : null,
+      accepted_terms_at: formKey === 'retreat_registration_v1' ? acceptedTermsAt : null,
     }
 
-    const rawPayload: Record<string, string | number | null> = {
+    const rawPayload: Record<string, string | number | boolean | null> = {
       firstName,
       lastName,
       email,
@@ -113,6 +133,10 @@ export async function POST(request: Request) {
       retreatSlug,
       retreatName,
       notes: legacyNotes,
+      marketingOptIn,
+      acceptedTerms: formKey === 'retreat_registration_v1' ? acceptedTerms : null,
+      acceptedTermsVersion: formKey === 'retreat_registration_v1' ? acceptedTermsVersion : null,
+      acceptedTermsAt: formKey === 'retreat_registration_v1' ? acceptedTermsAt : null,
     }
 
     const adminClient =
@@ -230,6 +254,8 @@ export async function POST(request: Request) {
       genderSelfDescribe ? `Gender self description: ${genderSelfDescribe}` : null,
       runnerType ? `Runner type: ${runnerType}` : null,
       locationLabel ? `Location: ${locationLabel}` : null,
+      `Marketing opt-in: ${marketingOptIn ? 'Yes' : 'No'}`,
+      formKey === 'retreat_registration_v1' ? `Terms accepted: ${acceptedTerms ? 'Yes' : 'No'}` : null,
       legacyNotes ? `Notes: ${legacyNotes}` : null,
     ].filter(Boolean)
 

@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { trackSiteEvent } from '@/utils/analytics'
+import { siteButtonClasses, siteTextClasses } from '@/utils/brand/site-brand'
+import { CONTACT_EMAIL_LABEL, MAILTO_GENERAL } from '@/utils/brand/contact'
 
 const NAV_LINKS = [
   { href: '/retreats', label: 'Retreats' },
@@ -30,10 +32,6 @@ export function SiteNav() {
   }, [])
 
   useEffect(() => {
-    setMobileOpen(false)
-  }, [pathname])
-
-  useEffect(() => {
     document.body.style.overflow = mobileOpen ? 'hidden' : ''
     return () => {
       document.body.style.overflow = ''
@@ -49,14 +47,14 @@ export function SiteNav() {
     <>
       <nav
         className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${
-          dark ? 'bg-[#2C4A3E]/95 shadow-sm backdrop-blur-md' : 'bg-transparent'
+          dark ? 'bg-[color:var(--site-accent-strong)]/95 shadow-sm backdrop-blur-md' : 'bg-transparent'
         }`}
       >
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5 md:px-12">
           <Link
             href="/"
             className={`font-serif text-xl font-bold tracking-tight transition-colors duration-500 ${
-              dark ? 'text-[#FAF8F4]' : 'text-white'
+              dark ? 'text-[var(--site-on-dark-primary)]' : 'text-white'
             }`}
           >
             Miles Between
@@ -67,8 +65,10 @@ export function SiteNav() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`relative text-sm font-medium transition-colors duration-300 ${
-                  dark ? 'text-[#A8C4B8] hover:text-[#FAF8F4]' : 'text-white/80 hover:text-white'
+                className={`relative transition-colors duration-300 ${siteTextClasses.nav} ${
+                  dark
+                    ? 'text-[var(--site-on-dark-muted)] hover:text-[var(--site-on-dark-primary)]'
+                    : 'text-white/80 hover:text-white'
                 }`}
               >
                 {link.label}
@@ -89,10 +89,10 @@ export function SiteNav() {
                   page_type: isRetreatDetail ? 'retreat' : 'site',
                 })
               }
-              className={`rounded-full border px-5 py-2.5 text-sm font-medium transition-all duration-300 ${
+              className={`rounded-full border px-5 py-2.5 text-sm transition-all duration-300 ${
                 dark
-                  ? 'border-[#FAF8F4]/60 text-[#FAF8F4] hover:bg-[#FAF8F4] hover:text-[#2C4A3E]'
-                  : 'border-white/80 text-white hover:bg-white hover:text-stone-900'
+                  ? siteButtonClasses.outlineDark
+                  : 'border-white/80 text-white hover:bg-[var(--site-surface-elevated)] hover:text-[var(--site-text-primary)]'
               }`}
             >
               {primaryCtaLabel}
@@ -104,7 +104,11 @@ export function SiteNav() {
             aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={mobileOpen}
             className={`relative z-[110] flex h-10 w-10 items-center justify-center transition-colors md:hidden ${
-              mobileOpen ? 'text-[#FAF8F4]' : dark ? 'text-[#FAF8F4]' : 'text-white'
+              mobileOpen
+                ? 'text-[var(--site-on-dark-primary)]'
+                : dark
+                  ? 'text-[var(--site-on-dark-primary)]'
+                  : 'text-white'
             }`}
           >
             <motion.span
@@ -136,7 +140,7 @@ export function SiteNav() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-[100] flex flex-col bg-[#2C4A3E] px-8 md:hidden"
+            className="fixed inset-0 z-[100] flex flex-col bg-[var(--site-accent-strong)] px-8 md:hidden"
           >
             <div className="flex flex-1 flex-col justify-center gap-2 pt-20">
               {NAV_LINKS.map((link, i) => (
@@ -149,10 +153,11 @@ export function SiteNav() {
                 >
                   <Link
                     href={link.href}
-                    className={`block py-3 font-serif text-4xl font-bold tracking-tight transition-colors ${
+                    onClick={() => setMobileOpen(false)}
+                    className={`block py-3 font-ui text-2xl font-medium tracking-[0.02em] transition-colors ${
                       isActive(pathname, link.href)
-                        ? 'text-[#FAF8F4]'
-                        : 'text-[#7A9E8E] hover:text-[#FAF8F4]'
+                        ? 'text-[var(--site-on-dark-primary)]'
+                        : 'text-[var(--site-text-secondary)] hover:text-[var(--site-on-dark-primary)]'
                     }`}
                   >
                     {link.label}
@@ -175,7 +180,7 @@ export function SiteNav() {
                       page_type: isRetreatDetail ? 'retreat' : 'site',
                     })
                   }}
-                  className="inline-block rounded-full border border-[#FAF8F4]/60 px-7 py-3.5 text-sm font-medium text-[#FAF8F4] transition-colors hover:bg-[#FAF8F4] hover:text-[#2C4A3E]"
+                  className={`inline-block rounded-full px-7 py-3.5 text-sm font-medium transition-colors ${siteButtonClasses.outlineDark}`}
                 >
                   {primaryCtaLabel}
                 </Link>
@@ -183,7 +188,12 @@ export function SiteNav() {
             </div>
 
             <div className="pb-12">
-              <p className="text-sm text-[#7A9E8E]">hello@milesbetween.com.au</p>
+              <Link
+                href={MAILTO_GENERAL}
+                className="font-ui text-sm tracking-[0.02em] text-[var(--site-text-secondary)] transition-colors hover:text-[var(--site-on-dark-primary)]"
+              >
+                {CONTACT_EMAIL_LABEL}
+              </Link>
             </div>
           </motion.div>
         )}
