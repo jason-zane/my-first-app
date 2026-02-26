@@ -74,17 +74,18 @@ export function ParallaxHero({
     const enable = () => {
       if (!cancelled) setMediaEnabled(true)
     }
-    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-      const handle = window.requestIdleCallback(() => enable(), { timeout: 2500 })
+    const win = typeof window !== 'undefined' ? window : null
+    if (win && 'requestIdleCallback' in win) {
+      const handle = win.requestIdleCallback(() => enable(), { timeout: 2500 })
       return () => {
         cancelled = true
-        window.cancelIdleCallback?.(handle)
+        win.cancelIdleCallback?.(handle)
       }
     }
-    const timeout = window.setTimeout(enable, 1800)
+    const timeout = globalThis.setTimeout(enable, 1800)
     return () => {
       cancelled = true
-      window.clearTimeout(timeout)
+      globalThis.clearTimeout(timeout)
     }
   }, [allowMotionMedia, shouldUseYouTube, shouldUseVideo])
 
