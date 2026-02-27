@@ -91,7 +91,7 @@ const FAQS = [
       },
       {
         q: "What's the cancellation policy?",
-        a: "Cancellations more than 60 days before the retreat receive a full refund of the deposit. Between 30–60 days, 50% of the deposit is refunded. Within 30 days, the deposit is non-refundable. We recommend travel insurance for the balance. Full details will be in your booking confirmation.",
+        a: "Cancellations more than 60 days before the retreat receive a full refund of the deposit. Between 30–60 days, 50% of the deposit is refunded. Within 30 days, the deposit is non-refundable. We recommend travel insurance for the balance. The full terms are in the retreat terms page and your booking confirmation.",
       },
       {
         q: 'Can I transfer my place to someone else?',

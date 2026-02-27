@@ -23,45 +23,20 @@ export default async function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head suppressHydrationWarning>
         <Script
-          id="Cookiebot"
-          src="https://consent.cookiebot.com/uc.js"
-          data-cbid="541a80e5-1ecc-4d4a-ad42-61d732887eb4"
-          data-blockingmode="auto"
-          type="text/javascript"
-          strategy="beforeInteractive"
+          src="https://www.googletagmanager.com/gtag/js?id=G-PNMPFPF37N"
+          strategy="afterInteractive"
           nonce={nonce}
         />
-        <Script id="consent-default" strategy="beforeInteractive" nonce={nonce}>
+        <Script id="ga-gtag" strategy="afterInteractive" nonce={nonce}>
           {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
-            gtag('consent', 'default', {
-              ad_storage: 'denied',
-              analytics_storage: 'denied',
-              ad_user_data: 'denied',
-              ad_personalization: 'denied'
-            });
-          `}
-        </Script>
-        <Script id="gtm-base" strategy="beforeInteractive" nonce={nonce}>
-          {`
-            (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-            'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-            })(window,document,'script','dataLayer','GTM-PMDPFV2C');
+            gtag('js', new Date());
+            gtag('config', 'G-PNMPFPF37N');
           `}
         </Script>
       </head>
       <body className="antialiased" suppressHydrationWarning>
-        <noscript>
-          <iframe
-            src="https://www.googletagmanager.com/ns.html?id=GTM-PMDPFV2C"
-            height="0"
-            width="0"
-            style={{ display: 'none', visibility: 'hidden' }}
-          />
-        </noscript>
         {children}
         <Analytics />
         <SpeedInsights />
