@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { trackSiteEvent } from '@/utils/analytics'
 import { siteButtonClasses } from '@/utils/brand/site-brand'
 
@@ -175,6 +176,9 @@ export function RegistrationForm({
   const [gender, setGender] = useState('')
   const [runnerType, setRunnerType] = useState('')
   const [acceptedTerms, setAcceptedTerms] = useState(false)
+  const [locationLabel, setLocationLabel] = useState('')
+
+  const searchParams = useSearchParams()
 
   const [showProfile, setShowProfile] = useState(false)
   const [profileSubmitting, setProfileSubmitting] = useState(false)
@@ -186,6 +190,12 @@ export function RegistrationForm({
     () => (mode === 'retreat' ? 'retreat_registration_v1' : 'general_registration_v1'),
     [mode]
   )
+
+  useEffect(() => {
+    const prefill = searchParams?.get('location')
+    if (!prefill) return
+    setLocationLabel(prefill)
+  }, [searchParams])
 
   const defaultSource = source ?? (mode === 'retreat' && retreatSlug ? `retreat:${retreatSlug}` : 'site:general')
 
@@ -556,6 +566,8 @@ export function RegistrationForm({
           type="text"
           required
           placeholder="City / region"
+          value={locationLabel}
+          onChange={(e) => setLocationLabel(e.target.value)}
           className="w-full font-ui border border-[var(--site-border)] bg-[var(--site-surface-elevated)] px-4 py-3 text-sm text-[var(--site-text-primary)] focus:border-[var(--site-accent-strong)] focus:outline-none"
         />
       </div>

@@ -2,6 +2,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { retreats } from '@/lib/retreats'
 import { Reveal } from '@/components/site/reveal'
+import { TransitionLink } from '@/components/site/transition-link'
+import { brandImagery } from '@/utils/brand/imagery'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -11,19 +13,48 @@ export const metadata: Metadata = {
 }
 
 const STATUS_LABEL: Record<string, string> = {
-  upcoming: 'Coming Soon',
+  upcoming: 'Next Retreat',
   open: 'Registrations Open',
   'sold-out': 'Sold Out',
+  interest: 'Coming Soon',
 }
 
 const STATUS_COLOR: Record<string, string> = {
-  upcoming: 'bg-amber-100 text-amber-800',
+  upcoming: 'bg-emerald-100 text-emerald-800',
   open: 'bg-[color:var(--site-cta-soft)] text-[var(--site-cta-bg)]',
   'sold-out': 'bg-[var(--site-border-soft)] text-[var(--site-text-body)]',
+  interest: 'bg-amber-100 text-amber-900 border border-amber-200',
 }
 
 export default function RetreatsPage() {
-  const retreatCards = retreats
+  const interestCards = [
+    {
+      slug: 'interest-melbourne',
+      name: 'Melbourne & Surrounds',
+      region: 'Victoria',
+      datesShort: 'Expression of interest',
+      description:
+        'Tell us where you run in Melbourne and the retreat experience you would actually book.',
+      heroImage: brandImagery.home.story.src,
+      heroImageAlt: brandImagery.home.story.alt,
+      status: 'interest',
+      href: '/?location=Melbourne,%20VIC#register',
+    },
+    {
+      slug: 'interest-brisbane',
+      name: 'Brisbane, Gold Coast & Sunshine Coast',
+      region: 'Queensland',
+      datesShort: 'Expression of interest',
+      description:
+        'Help us shape a coastal retreat around Brisbane, the Gold Coast or the Sunshine Coast.',
+      heroImage: brandImagery.cards.environment.src,
+      heroImageAlt: brandImagery.cards.environment.alt,
+      status: 'interest',
+      href: '/?location=Brisbane%20/%20Gold%20Coast%20/%20Sunshine%20Coast,%20QLD#register',
+    },
+  ]
+
+  const retreatCards = [...retreats, ...interestCards]
 
   return (
     <div className="bg-[var(--site-bg)] text-[var(--site-text-primary)]">
@@ -56,9 +87,9 @@ export default function RetreatsPage() {
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
             {retreatCards.map((retreat, i) => (
               <Reveal key={retreat.slug} delay={i * 0.1}>
-                <Link
-                  href={`/retreats/${retreat.slug}`}
-                  className="group flex flex-col overflow-hidden border border-[var(--site-border-soft)] bg-[var(--site-surface-elevated)] transition-shadow hover:shadow-lg"
+                <TransitionLink
+                  href={'href' in retreat ? retreat.href : `/retreats/${retreat.slug}`}
+                  className="group flex h-full flex-col overflow-hidden border border-[var(--site-border-soft)] bg-[var(--site-surface-elevated)] transition-shadow hover:shadow-lg"
                 >
                   <div className="relative overflow-hidden">
                     <div className="relative aspect-[4/3] w-full overflow-hidden">
@@ -74,7 +105,7 @@ export default function RetreatsPage() {
                       <span
                         className={`font-ui rounded-full px-3 py-1 text-xs font-medium ${STATUS_COLOR[retreat.status] ?? ''}`}
                       >
-                        {STATUS_LABEL[retreat.status]}
+                        {STATUS_LABEL[retreat.status] ?? 'Retreat'}
                       </span>
                     </div>
                   </div>
@@ -83,26 +114,34 @@ export default function RetreatsPage() {
                     <p className="font-ui mb-2 text-xs font-medium uppercase tracking-[0.2em] text-[var(--site-text-muted)]">
                       {retreat.region} • {retreat.datesShort}
                     </p>
-                    <h2 className="mb-3 font-serif text-2xl font-bold text-[var(--site-text-primary)]">
+                    <h2 className="mb-3 min-h-[3.25rem] font-serif text-2xl font-bold text-[var(--site-text-primary)]">
                       {retreat.name}
                     </h2>
-                    <p className="mb-6 flex-1 text-sm leading-relaxed text-[var(--site-text-body)]">
+                    <p className="mb-6 min-h-[5.5rem] flex-1 text-sm leading-relaxed text-[var(--site-text-body)]">
                       {retreat.description}
                     </p>
-                    <div className="flex items-center justify-between border-t border-[var(--site-border-soft)] pt-4">
-                      <div>
-                        <p className="font-ui text-xs text-[var(--site-text-muted)]">From</p>
-                        <p className="font-serif text-xl font-bold text-[var(--site-text-primary)]">
-                          ${retreat.priceFrom.toLocaleString()}
-                          <span className="text-sm font-normal text-[var(--site-text-muted)]"> pp</span>
-                        </p>
+                    {'priceFrom' in retreat ? (
+                      <div className="flex min-h-[64px] items-center justify-between border-t border-[var(--site-border-soft)] pt-4">
+                        <div>
+                          <p className="font-ui text-xs text-[var(--site-text-muted)]">From</p>
+                          <p className="font-serif text-xl font-bold text-[var(--site-text-primary)]">
+                            ${retreat.priceFrom.toLocaleString()}
+                            <span className="text-sm font-normal text-[var(--site-text-muted)]"> pp</span>
+                          </p>
+                        </div>
+                        <span className="font-ui text-sm font-medium tracking-[0.02em] text-[var(--site-cta-bg)] group-hover:underline">
+                          View retreat →
+                        </span>
                       </div>
-                      <span className="font-ui text-sm font-medium tracking-[0.02em] text-[var(--site-cta-bg)] group-hover:underline">
-                        View retreat →
-                      </span>
-                    </div>
+                    ) : (
+                      <div className="flex min-h-[64px] items-center justify-between border-t border-[var(--site-border-soft)] pt-4">
+                        <span className="font-ui text-sm font-medium tracking-[0.02em] text-[var(--site-cta-bg)] group-hover:underline">
+                          Join interest list →
+                        </span>
+                      </div>
+                    )}
                   </div>
-                </Link>
+                </TransitionLink>
               </Reveal>
             ))}
           </div>

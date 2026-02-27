@@ -34,6 +34,13 @@ Redeploy after setting/updating env vars.
   - Enabled
   - Custom SMTP configured with Resend
 
+## 2.5) Cookiebot + Consent Mode v2
+
+- Create a Cookiebot Domain Group and add the production domain.
+- Enable Consent Mode v2 in Cookiebot.
+- Add the Domain Group ID to the site (already wired in `app/layout.tsx`).
+- Verify the consent banner appears and that analytics only fires after consent.
+
 ## 3) Supabase Email Templates
 
 Use token-hash links (not plain site links) so reset/invite links always carry auth credentials.
@@ -65,6 +72,8 @@ npm run db:push
 4. Confirm login works and `/dashboard` loads
 5. Run a password reset from login page and confirm flow works
 6. Submit the public interest form and confirm both emails send
+7. Verify CSP is present and no CSP violations are logged in the browser console
+8. Confirm GTM loads and consent gates tracking until opt-in
 
 ## 7) Email Queue Cron
 
