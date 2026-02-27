@@ -21,7 +21,7 @@ export default async function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
+      <head suppressHydrationWarning>
         <Script
           id="Cookiebot"
           src="https://consent.cookiebot.com/uc.js"
@@ -53,7 +53,7 @@ export default async function RootLayout({
           `}
         </Script>
       </head>
-      <body className="antialiased">
+      <body className="antialiased" suppressHydrationWarning>
         <noscript>
           <iframe
             src="https://www.googletagmanager.com/ns.html?id=GTM-PMDPFV2C"

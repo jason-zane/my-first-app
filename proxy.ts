@@ -12,17 +12,30 @@ function generateNonce() {
 }
 
 function buildCsp(nonce: string) {
+  const isDev = process.env.NODE_ENV !== 'production'
+  const scriptSrc = [
+    "'self'",
+    `'nonce-${nonce}'`,
+    'https://www.googletagmanager.com',
+    'https://consent.cookiebot.com',
+    'https://consentcdn.cookiebot.com',
+    'https://va.vercel-scripts.com',
+  ]
+  if (isDev) {
+    scriptSrc.push("'unsafe-eval'")
+  }
+
   return [
     "default-src 'self'",
     "base-uri 'self'",
-    "img-src 'self' data: https://images.unsplash.com https://i.ytimg.com https://www.google-analytics.com",
+    "img-src 'self' data: https://images.unsplash.com https://i.ytimg.com https://www.google-analytics.com https://imgsct.cookiebot.com",
     "style-src 'self' 'unsafe-inline'",
     "style-src-attr 'unsafe-inline'",
-    `script-src 'self' 'nonce-${nonce}' https://www.googletagmanager.com https://consent.cookiebot.com https://va.vercel-scripts.com`,
+    `script-src ${scriptSrc.join(' ')}`,
     "script-src-attr 'none'",
     "font-src 'self' data:",
-    "connect-src 'self' https://*.supabase.co https://vitals.vercel-insights.com https://www.google-analytics.com https://www.googletagmanager.com https://consent.cookiebot.com",
-    "frame-src https://www.googletagmanager.com https://www.youtube.com https://www.youtube-nocookie.com",
+    "connect-src 'self' https://*.supabase.co https://vitals.vercel-insights.com https://www.google-analytics.com https://www.googletagmanager.com https://consent.cookiebot.com https://consentcdn.cookiebot.com",
+    "frame-src https://www.googletagmanager.com https://www.youtube.com https://www.youtube-nocookie.com https://consentcdn.cookiebot.com",
     "object-src 'none'",
     "frame-ancestors 'none'",
     "form-action 'self'",
