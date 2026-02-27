@@ -16,7 +16,7 @@ export function HomeHero() {
       youtubeVideoId="kZAoizsl-kI"
       posterSrc="https://i.ytimg.com/vi/kZAoizsl-kI/maxresdefault.jpg"
     >
-      <div className="relative z-10 mx-auto w-full max-w-7xl px-6 md:px-12">
+      <div className="relative z-10 mx-auto w-full max-w-7xl px-6 pt-24 sm:pt-28 md:pt-0 md:px-12">
         <div className="max-w-4xl">
           <motion.p
             initial={{ opacity: 0, y: 16 }}

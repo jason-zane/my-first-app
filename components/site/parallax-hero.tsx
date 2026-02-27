@@ -35,6 +35,7 @@ export function ParallaxHero({
   const ref = useRef<HTMLElement>(null)
   const prefersReducedMotion = useReducedMotion()
   const [mediaEnabled, setMediaEnabled] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
   const [youtubeLoaded, setYoutubeLoaded] = useState(false)
   const [youtubeFailed, setYoutubeFailed] = useState(false)
   const [videoFailed, setVideoFailed] = useState(false)
@@ -69,7 +70,16 @@ export function ParallaxHero({
   }, [shouldUseYouTube, youtubeLoaded])
 
   useEffect(() => {
+    if (typeof window === 'undefined') return
+    const update = () => setIsMobile(window.innerWidth < 768)
+    update()
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
+  }, [])
+
+  useEffect(() => {
     if (!allowMotionMedia || !(shouldUseYouTube || shouldUseVideo)) return
+    if (isMobile) return
     let cancelled = false
     const enable = () => {
       if (!cancelled) setMediaEnabled(true)
@@ -87,7 +97,7 @@ export function ParallaxHero({
       cancelled = true
       globalThis.clearTimeout(timeout)
     }
-  }, [allowMotionMedia, shouldUseYouTube, shouldUseVideo])
+  }, [allowMotionMedia, shouldUseYouTube, shouldUseVideo, isMobile])
 
   return (
     <section ref={ref} className={`relative flex items-end overflow-hidden pb-24 md:pb-36 ${minHeight}`}>
@@ -103,7 +113,7 @@ export function ParallaxHero({
             decoding="async"
             className={`h-full w-full object-cover ${imgClassName}`}
           />
-          {mediaEnabled && shouldUseYouTube ? (
+          {mediaEnabled && shouldUseYouTube && !isMobile ? (
             <iframe
               title="Hero video"
               src={youtubeUrl}
@@ -115,7 +125,7 @@ export function ParallaxHero({
               onLoad={() => setYoutubeLoaded(true)}
             />
           ) : null}
-          {mediaEnabled && !shouldUseYouTube && shouldUseVideo ? (
+          {mediaEnabled && !shouldUseYouTube && shouldUseVideo && !isMobile ? (
             <video
               autoPlay
               muted
