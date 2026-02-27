@@ -10,6 +10,7 @@ import { siteButtonClasses, siteTextClasses } from '@/utils/brand/site-brand'
 import { CONTACT_EMAIL_LABEL, MAILTO_GENERAL } from '@/utils/brand/contact'
 
 const NAV_LINKS = [
+  { href: '/', label: 'Home' },
   { href: '/retreats', label: 'Retreats' },
   { href: '/experience', label: 'Experience' },
   { href: '/about', label: 'About' },
