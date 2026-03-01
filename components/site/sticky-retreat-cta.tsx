@@ -31,7 +31,7 @@ export function StickyRetreatCta({ retreat }: { retreat: Retreat }) {
             Close
           </button>
           <div className="space-y-2">
-            <p className={`${siteTextClasses.meta} text-[var(--site-on-dark-muted)]`}>Current retreat</p>
+            <p className={`${siteTextClasses.meta} text-[var(--site-on-dark-muted)]`}>Next retreat</p>
             <p className="font-serif text-base font-semibold text-[var(--site-on-dark-primary)]">{retreat.name}</p>
             <p className="text-xs text-[var(--site-on-dark-muted)]">{retreat.dates}</p>
             <p className="text-xs text-[var(--site-on-dark-muted)]">Limited spaces remaining</p>
