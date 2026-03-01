@@ -20,7 +20,7 @@ export function StickyRetreatCta({ retreat }: { retreat: Retreat }) {
           animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
           exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 24 }}
           transition={{ type: 'spring', stiffness: 260, damping: 26 }}
-          className="relative fixed bottom-5 right-5 z-40 w-[300px] rounded-md border border-[color:var(--site-on-dark-primary)]/10 bg-[color:var(--site-accent-strong)]/70 p-4 shadow-2xl backdrop-blur-md"
+          className="fixed bottom-3 right-3 z-40 w-[300px] rounded-md border border-[color:var(--site-on-dark-primary)]/10 bg-[color:var(--site-accent-strong)]/70 p-4 shadow-2xl backdrop-blur-md sm:bottom-5 sm:right-5"
         >
           <button
             type="button"

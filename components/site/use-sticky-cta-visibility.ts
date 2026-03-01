@@ -5,17 +5,14 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 type StickyVisibilityOptions = {
   ctaKey: string
   registerSelector?: string
-  idleMs?: number
 }
 
 export function useStickyCtaVisibility({
   ctaKey,
   registerSelector = '#register',
-  idleMs = 8000,
 }: StickyVisibilityOptions) {
   const storageKey = useMemo(() => `stickyCtaDismissed:${ctaKey}`, [ctaKey])
-  const [visible, setVisible] = useState(false)
-  const [hasScrolled, setHasScrolled] = useState(false)
+  const [pastThreshold, setPastThreshold] = useState(false)
   const [dismissed, setDismissed] = useState(false)
   const [inView, setInView] = useState(false)
   const [focusInForm, setFocusInForm] = useState(false)
@@ -29,30 +26,21 @@ export function useStickyCtaVisibility({
   }, [storageKey])
 
   useEffect(() => {
-    if (blocked || dismissed) {
-      setVisible(false)
-    }
-  }, [blocked, dismissed])
-
-  useEffect(() => {
     if (typeof window === 'undefined') return
-    let idleTimer: number | null = null
 
-    const onScroll = () => {
-      setHasScrolled(true)
-      if (!dismissed && !blocked) {
-        setVisible(true)
-      }
-      if (idleTimer) window.clearTimeout(idleTimer)
-      idleTimer = window.setTimeout(() => setVisible(false), idleMs)
+    const updateThreshold = () => {
+      setPastThreshold(window.scrollY > window.innerHeight * 0.85)
     }
 
-    window.addEventListener('scroll', onScroll, { passive: true })
+    updateThreshold()
+    window.addEventListener('scroll', updateThreshold, { passive: true })
+    window.addEventListener('resize', updateThreshold)
+
     return () => {
-      window.removeEventListener('scroll', onScroll)
-      if (idleTimer) window.clearTimeout(idleTimer)
+      window.removeEventListener('scroll', updateThreshold)
+      window.removeEventListener('resize', updateThreshold)
     }
-  }, [blocked, dismissed, idleMs])
+  }, [])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -93,11 +81,10 @@ export function useStickyCtaVisibility({
       window.sessionStorage.setItem(storageKey, '1')
     }
     setDismissed(true)
-    setVisible(false)
   }, [storageKey])
 
   return {
-    visible: visible && hasScrolled && !dismissed && !blocked,
+    visible: pastThreshold && !dismissed && !blocked,
     dismiss,
   }
 }
