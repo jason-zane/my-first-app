@@ -70,8 +70,9 @@ export function useStickyCtaVisibility({
     observer.observe(target)
 
     const onFocusIn = () => setFocusInForm(true)
-    const onFocusOut = (event: FocusEvent) => {
-      const nextTarget = event.relatedTarget as Node | null
+    const onFocusOut = (event: Event) => {
+      const nextTarget =
+        event instanceof FocusEvent ? (event.relatedTarget as Node | null) : null
       if (!nextTarget || !target.contains(nextTarget)) {
         setFocusInForm(false)
       }
