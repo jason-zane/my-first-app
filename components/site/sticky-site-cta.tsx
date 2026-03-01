@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { Retreat } from '@/lib/retreats'
 import { trackSiteEvent } from '@/utils/analytics'
 import { siteButtonClasses, siteTextClasses } from '@/utils/brand/site-brand'
 
-export function StickyRetreatCta({ retreat }: { retreat: Retreat }) {
+export function StickySiteCta({ retreat }: { retreat: Retreat }) {
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
@@ -17,35 +17,35 @@ export function StickyRetreatCta({ retreat }: { retreat: Retreat }) {
 
   return (
     <AnimatePresence>
-      {visible && (
+      {visible ? (
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 24 }}
           transition={{ type: 'spring', stiffness: 260, damping: 26 }}
-          className="fixed bottom-5 right-5 z-40 w-[300px] rounded-md border border-[color:var(--site-on-dark-primary)]/10 bg-[color:var(--site-accent-strong)]/95 p-4 shadow-2xl backdrop-blur-sm"
+          className="fixed bottom-5 right-5 z-40 w-[280px] rounded-md border border-[var(--site-border-soft)] bg-[var(--site-surface-elevated)] p-4 shadow-xl"
         >
           <div className="space-y-2">
-            <p className={`${siteTextClasses.meta} text-[var(--site-on-dark-muted)]`}>Current retreat</p>
-            <p className="font-serif text-base font-semibold text-[var(--site-on-dark-primary)]">{retreat.name}</p>
-            <p className="text-xs text-[var(--site-on-dark-muted)]">{retreat.dates}</p>
-            <p className="text-xs text-[var(--site-on-dark-muted)]">Limited spaces remaining</p>
+            <p className={`${siteTextClasses.meta} text-[var(--site-text-muted)]`}>Current retreat</p>
+            <p className="font-serif text-base font-semibold text-[var(--site-text-primary)]">{retreat.name}</p>
+            <p className="text-xs text-[var(--site-text-muted)]">{retreat.dates}</p>
+            <p className="text-xs text-[var(--site-text-muted)]">Limited spaces remaining</p>
           </div>
           <a
-            href="#register"
+            href={`/retreats/${retreat.slug}`}
             onClick={() =>
               trackSiteEvent('cta_clicked', {
-                cta_id: 'sticky_retreat_apply',
-                page_type: 'retreat',
+                cta_id: 'sticky_site_retreat',
+                page_type: 'site',
                 retreat_slug: retreat.slug,
               })
             }
             className={`mt-3 inline-flex w-full items-center justify-center px-4 py-2 text-xs font-medium transition-colors ${siteButtonClasses.primary}`}
           >
-            Apply for This Retreat
+            View Retreat
           </a>
         </motion.div>
-      )}
+      ) : null}
     </AnimatePresence>
   )
 }

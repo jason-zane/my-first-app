@@ -65,6 +65,57 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── WHO IT'S FOR ──────────────────────────────────────────────────── */}
+      <section className="bg-[var(--site-surface-alt)] py-28 md:py-40">
+        <div className="mx-auto max-w-7xl px-6 md:px-12">
+          <Reveal>
+            <div className="mb-16">
+              <p className="font-ui mb-5 text-xs font-medium uppercase tracking-[0.2em] text-[var(--site-text-muted)]">
+                Who This Fits
+              </p>
+              <h2 className="font-serif text-4xl font-bold leading-[1.15] text-[var(--site-text-primary)] md:text-5xl">
+                You run most weeks.
+                <br />
+                <span className="italic">You also have a full life.</span>
+              </h2>
+            </div>
+          </Reveal>
+
+          <div className="grid grid-cols-1 gap-10 md:grid-cols-2">
+            {[
+              {
+                title: 'Conversational Distance',
+                body: 'You are comfortable running 10 to 15 km at conversational effort.',
+              },
+              {
+                title: 'Small Group Energy',
+                body: 'You prefer small groups over big event energy.',
+              },
+              {
+                title: 'Care for Place',
+                body: 'You care about food, place, and people as much as pace.',
+              },
+              {
+                title: 'Come Back Clear',
+                body: 'You want to come home clearer, not depleted.',
+              },
+            ].map((item, i) => (
+              <Reveal key={item.title} delay={i * 0.1}>
+                <div className="border-t-2 border-[var(--site-accent-strong)] pt-8">
+                  <p className="font-ui mb-3 text-xs font-medium tracking-[0.2em] text-[var(--site-text-muted)]">
+                    {String(i + 1).padStart(2, '0')}
+                  </p>
+                  <h3 className="mb-4 font-serif text-2xl font-bold text-[var(--site-text-primary)]">
+                    {item.title}
+                  </h3>
+                  <p className="leading-relaxed text-[var(--site-text-body)]">{item.body}</p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── THE EXPERIENCE ────────────────────────────────────────────────── */}
       <section className="bg-[var(--site-accent-strong)] py-28 md:py-40">
         <div className="mx-auto max-w-7xl px-6 md:px-12">
@@ -130,55 +181,6 @@ export default function Home() {
                 </div>
               </Reveal>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── WHO IT'S FOR ──────────────────────────────────────────────────── */}
-      <section className="bg-[var(--site-surface-alt)] py-28 md:py-40">
-        <div className="mx-auto max-w-7xl px-6 md:px-12">
-          <div className="grid grid-cols-1 items-center gap-16 lg:grid-cols-2 lg:gap-28">
-            <Reveal delay={0.05} y={32} className="order-2 lg:order-1">
-              <div className="relative aspect-square w-full overflow-hidden rounded-sm">
-                <Image
-                  src={brandImagery.home.connection.src}
-                  alt={brandImagery.home.connection.alt}
-                  fill
-                  className="object-cover object-[center_40%] transition-transform duration-700 hover:scale-[1.03] md:object-center"
-                  sizes="(max-width: 1024px) 100vw, 50vw"
-                />
-              </div>
-            </Reveal>
-
-            <div className="order-1 lg:order-2">
-              <Reveal delay={0.1}>
-                <p className="font-ui mb-6 text-xs font-medium uppercase tracking-[0.2em] text-[var(--site-text-muted)]">
-                  Who This Fits
-                </p>
-              </Reveal>
-              <Reveal delay={0.2}>
-                <h2 className="mb-12 font-serif text-4xl font-bold leading-[1.15] text-[var(--site-text-primary)] md:text-5xl">
-                  You run most weeks.
-                  <br />
-                  <span className="italic">You also have a full life.</span>
-                </h2>
-              </Reveal>
-              <ul className="space-y-7">
-                {[
-                  'You are comfortable running 10 to 15 km at conversational effort.',
-                  'You prefer small groups over big event energy.',
-                  'You care about food, place, and people as much as pace.',
-                  'You want to come home clearer, not depleted.',
-                ].map((item, i) => (
-                  <Reveal key={i} delay={0.3 + i * 0.1}>
-                    <li className="flex items-start gap-5">
-                      <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--site-cta-bg)]" />
-                      <p className="text-lg leading-relaxed text-[var(--site-text-body)]">{item}</p>
-                    </li>
-                  </Reveal>
-                ))}
-              </ul>
-            </div>
           </div>
         </div>
       </section>

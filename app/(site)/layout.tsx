@@ -1,6 +1,8 @@
 import { Playfair_Display, Lora, Inter } from 'next/font/google'
 import { SiteNav } from '@/components/site/site-nav'
 import { SiteFooter } from '@/components/site/site-footer'
+import { StickySiteCtaWrapper } from '@/components/site/sticky-site-cta-wrapper'
+import { retreats } from '@/lib/retreats'
 
 const playfair = Playfair_Display({
   subsets: ['latin'],
@@ -21,11 +23,14 @@ const inter = Inter({
 })
 
 export default function SiteLayout({ children }: { children: React.ReactNode }) {
+  const currentRetreat = retreats[0]
+
   return (
     <div className={`${playfair.variable} ${lora.variable} ${inter.variable} site-theme-v1 font-lora`}>
       <SiteNav />
       <main>{children}</main>
       <SiteFooter />
+      {currentRetreat ? <StickySiteCtaWrapper retreat={currentRetreat} /> : null}
     </div>
   )
 }
