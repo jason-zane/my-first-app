@@ -32,7 +32,7 @@ export function Marquee({ items = DEFAULT_ITEMS, href = '/retreats' }: { items?:
             className="font-ui inline-flex items-center gap-5 px-2 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--site-on-dark-muted)]"
           >
             {item}
-            <span className="opacity-30">·</span>
+            <span className="text-[var(--site-cta-bg)]/85">·</span>
           </span>
         ))}
       </motion.div>

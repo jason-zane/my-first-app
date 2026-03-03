@@ -20,7 +20,7 @@ export function SiteFooter() {
           </div>
 
           <div>
-            <p className={`mb-4 text-[var(--site-text-secondary)] ${siteTextClasses.eyebrow}`}>
+            <p className={`mb-4 text-[var(--site-cta-bg)] ${siteTextClasses.eyebrow}`}>
               Explore
             </p>
             <nav className="flex flex-col gap-3">
@@ -43,7 +43,7 @@ export function SiteFooter() {
           </div>
 
           <div>
-            <p className={`mb-4 text-[var(--site-text-secondary)] ${siteTextClasses.eyebrow}`}>
+            <p className={`mb-4 text-[var(--site-cta-bg)] ${siteTextClasses.eyebrow}`}>
               Get in touch
             </p>
             <a

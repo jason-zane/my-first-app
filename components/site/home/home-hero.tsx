@@ -22,7 +22,7 @@ export function HomeHero() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="font-ui mb-6 text-xs font-medium uppercase tracking-[0.16em] text-[var(--site-on-dark-muted)]"
+            className="font-ui mb-6 border-l-2 border-[var(--site-cta-bg)] pl-3 text-xs font-medium uppercase tracking-[0.16em] text-[var(--site-on-dark-muted)]"
           >
             Miles Between Retreats
           </motion.p>

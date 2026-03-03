@@ -80,7 +80,7 @@ export function SiteNav() {
                 {isActive(pathname, link.href) && (
                   <motion.span
                     layoutId="nav-underline"
-                    className="absolute -bottom-1 left-0 right-0 h-px bg-current"
+                    className="absolute -bottom-1 left-0 right-0 h-px bg-[var(--site-cta-bg)]"
                     transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                   />
                 )}

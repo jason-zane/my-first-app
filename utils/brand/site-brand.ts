@@ -44,3 +44,10 @@ export const siteStatusClasses = {
   interest:
     'border border-[var(--site-cta-bg)]/45 bg-[color:var(--site-surface-elevated)]/95 text-[var(--site-cta-bg)]',
 } as const
+
+export const siteAccentClasses = {
+  label: 'text-[var(--site-cta-bg)]',
+  divider: 'border-[var(--site-cta-bg)]/40',
+  icon: 'text-[var(--site-cta-bg)]',
+  chipSoft: 'border border-[var(--site-cta-bg)]/25 bg-[var(--site-cta-soft)] text-[var(--site-cta-bg)]',
+} as const

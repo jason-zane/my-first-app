@@ -36,7 +36,7 @@ export default function AboutPage() {
       <section className="relative overflow-hidden border-b border-[color:var(--site-on-dark-primary)]/12 bg-gradient-to-b from-[var(--site-accent-strong)] to-[var(--site-accent-deep)] pt-40 pb-24 md:pt-52 md:pb-32">
         <div className="mx-auto max-w-7xl px-6 md:px-12">
           <Reveal delay={0.1}>
-            <p className="font-ui mb-5 text-xs font-medium uppercase tracking-[0.16em] text-[var(--site-text-secondary)]">
+            <p className="font-ui mb-5 border-l-2 border-[var(--site-cta-bg)] pl-3 text-xs font-medium uppercase tracking-[0.16em] text-[var(--site-text-secondary)]">
               About
             </p>
           </Reveal>
@@ -56,7 +56,7 @@ export default function AboutPage() {
           <div className="grid grid-cols-1 gap-16 lg:grid-cols-2 lg:gap-28">
             <Reveal delay={0.1}>
               <div>
-                <p className="font-ui mb-6 text-xs font-medium uppercase tracking-[0.2em] text-[var(--site-text-muted)]">
+                <p className="font-ui mb-6 text-xs font-medium uppercase tracking-[0.2em] text-[var(--site-cta-bg)]">
                   The Start
                 </p>
                 <h2 className="font-serif text-4xl font-bold leading-[1.15] text-[var(--site-text-primary)] md:text-5xl">
@@ -85,7 +85,7 @@ export default function AboutPage() {
         <div className="mx-auto max-w-7xl px-6 md:px-12">
           <Reveal>
             <div className="mb-16">
-              <p className="font-ui mb-5 text-xs font-medium uppercase tracking-[0.2em] text-[var(--site-text-muted)]">
+              <p className="font-ui mb-5 text-xs font-medium uppercase tracking-[0.2em] text-[var(--site-cta-bg)]">
                 What we believe
               </p>
               <h2 className="font-serif text-4xl font-bold leading-[1.15] text-[var(--site-text-primary)] md:text-5xl">
@@ -97,7 +97,7 @@ export default function AboutPage() {
           <div className="grid grid-cols-1 gap-10 md:grid-cols-2">
             {VALUES.map((value, i) => (
               <Reveal key={value.title} delay={i * 0.1}>
-                <div className="border-t-2 border-[var(--site-accent-strong)] pt-8">
+                <div className="border-t-2 border-[var(--site-cta-bg)] pt-8">
                   <p className="font-ui mb-3 text-xs font-medium tracking-[0.2em] text-[var(--site-text-muted)]">
                     {String(i + 1).padStart(2, '0')}
                   </p>
@@ -129,7 +129,7 @@ export default function AboutPage() {
           <div className="flex items-center py-24 md:py-36">
             <div className="w-full px-6 md:px-12 lg:pr-[calc((100vw-80rem)/2)] lg:pl-16">
               <Reveal delay={0.1}>
-                <p className="font-ui mb-6 text-xs font-medium uppercase tracking-[0.2em] text-[var(--site-text-muted)]">
+                <p className="font-ui mb-6 text-xs font-medium uppercase tracking-[0.2em] text-[var(--site-cta-bg)]">
                   Who we are
                 </p>
               </Reveal>

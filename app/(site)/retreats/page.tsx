@@ -56,7 +56,7 @@ export default function RetreatsPage() {
       <section className="relative overflow-hidden border-b border-[color:var(--site-on-dark-primary)]/12 bg-gradient-to-b from-[var(--site-accent-strong)] to-[var(--site-accent-deep)] pt-40 pb-24 md:pt-52 md:pb-32">
         <div className="mx-auto max-w-7xl px-6 md:px-12">
           <Reveal delay={0.1}>
-            <p className="font-ui mb-5 text-xs font-medium uppercase tracking-[0.16em] text-[var(--site-text-secondary)]">
+            <p className="font-ui mb-5 border-l-2 border-[var(--site-cta-bg)] pl-3 text-xs font-medium uppercase tracking-[0.16em] text-[var(--site-text-secondary)]">
               Retreats
             </p>
           </Reveal>
@@ -147,7 +147,7 @@ export default function RetreatsPage() {
         <div className="mx-auto max-w-7xl px-6 md:px-12">
           <Reveal>
             <div className="mx-auto max-w-xl text-center">
-              <p className="font-ui mb-5 text-xs font-medium uppercase tracking-[0.2em] text-[var(--site-text-secondary)]">
+              <p className="font-ui mb-5 text-xs font-medium uppercase tracking-[0.2em] text-[var(--site-cta-text)]">
                 Next locations
               </p>
               <h2 className="mb-6 font-serif text-4xl font-bold text-[var(--site-bg)]">

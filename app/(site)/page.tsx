@@ -66,7 +66,7 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-6 md:px-12">
           <Reveal>
             <div className="mb-16">
-              <p className="font-ui mb-5 text-xs font-medium uppercase tracking-[0.2em] text-[var(--site-text-muted)]">
+              <p className="font-ui mb-5 text-xs font-medium uppercase tracking-[0.2em] text-[var(--site-cta-bg)]">
                 Who This Fits
               </p>
               <h2 className="font-serif text-4xl font-bold leading-[1.15] text-[var(--site-text-primary)] md:text-5xl">
@@ -97,7 +97,7 @@ export default function Home() {
               },
             ].map((item, i) => (
               <Reveal key={item.title} delay={i * 0.1}>
-                <div className="border-t-2 border-[var(--site-accent-strong)] pt-8">
+                <div className="border-t-2 border-[var(--site-cta-bg)] pt-8">
                   <p className="font-ui mb-3 text-xs font-medium tracking-[0.2em] text-[var(--site-text-muted)]">
                     {String(i + 1).padStart(2, '0')}
                   </p>
@@ -117,7 +117,7 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-6 md:px-12">
           <div className="mb-20">
             <Reveal delay={0.05}>
-              <p className="font-ui mb-5 text-xs font-medium uppercase tracking-[0.2em] text-[var(--site-text-secondary)]">
+              <p className="font-ui mb-5 text-xs font-medium uppercase tracking-[0.2em] text-[var(--site-cta-text)]">
                 The Experience
               </p>
             </Reveal>
@@ -187,7 +187,7 @@ export default function Home() {
           <div className="grid grid-cols-1 items-center gap-16 lg:grid-cols-2 lg:gap-24">
             <div>
               <Reveal delay={0.05}>
-                <p className="font-ui mb-5 text-xs font-medium uppercase tracking-[0.2em] text-[var(--site-text-muted)]">
+                <p className="font-ui mb-5 text-xs font-medium uppercase tracking-[0.2em] text-[var(--site-cta-bg)]">
                   First Retreat
                 </p>
               </Reveal>
@@ -242,7 +242,7 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-6 md:px-12">
           <Reveal>
             <div className="mx-auto mb-16 max-w-xl text-center">
-              <p className="font-ui mb-6 text-xs font-medium uppercase tracking-[0.2em] text-[var(--site-text-muted)]">
+              <p className="font-ui mb-6 text-xs font-medium uppercase tracking-[0.2em] text-[var(--site-cta-bg)]">
                 Stay in the loop
               </p>
               <h2 className="mb-6 font-serif text-4xl font-bold leading-[1.15] text-[var(--site-text-primary)] md:text-5xl">

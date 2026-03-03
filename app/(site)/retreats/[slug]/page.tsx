@@ -39,7 +39,7 @@ export default async function RetreatPage({ params }: Props) {
       >
         <div className="relative z-10 mx-auto w-full max-w-7xl px-6 md:px-12">
           <Reveal delay={0.1}>
-            <p className="font-ui mb-4 text-xs font-medium uppercase tracking-[0.16em] text-[var(--site-on-dark-muted)]">
+            <p className="font-ui mb-4 border-l-2 border-[var(--site-cta-bg)] pl-3 text-xs font-medium uppercase tracking-[0.16em] text-[var(--site-on-dark-muted)]">
               {retreat.region} • {retreat.datesShort}
             </p>
           </Reveal>
@@ -117,7 +117,7 @@ export default async function RetreatPage({ params }: Props) {
         <div className="mx-auto max-w-7xl px-6 md:px-12">
           <Reveal>
             <div className="mx-auto max-w-2xl text-center">
-              <p className="font-ui mb-6 text-xs font-medium uppercase tracking-[0.2em] text-[var(--site-text-muted)]">
+              <p className="font-ui mb-6 text-xs font-medium uppercase tracking-[0.2em] text-[var(--site-cta-bg)]">
                 The Retreat
               </p>
               <p className="font-serif text-3xl font-bold leading-[1.2] text-[var(--site-text-primary)] md:text-4xl">
@@ -135,7 +135,7 @@ export default async function RetreatPage({ params }: Props) {
           <div className="flex items-center py-24 md:py-36">
             <Reveal delay={0.1}>
               <div className="w-full px-6 md:px-12 lg:pl-[calc((100vw-80rem)/2)] lg:pr-16">
-                <p className="font-ui mb-5 text-xs font-medium uppercase tracking-[0.2em] text-[var(--site-text-muted)]">
+                <p className="font-ui mb-5 text-xs font-medium uppercase tracking-[0.2em] text-[var(--site-cta-bg)]">
                   Where you&apos;ll stay
                 </p>
                 <h2 className="mb-8 font-serif text-4xl font-bold leading-[1.15] text-[var(--site-text-primary)] md:text-5xl">
@@ -178,7 +178,7 @@ export default async function RetreatPage({ params }: Props) {
           <div className="mx-auto max-w-7xl px-6 md:px-12">
             <Reveal>
               <div className="mb-8">
-                <p className="font-ui mb-3 text-xs font-medium uppercase tracking-[0.2em] text-[var(--site-text-muted)]">
+                <p className="font-ui mb-3 text-xs font-medium uppercase tracking-[0.2em] text-[var(--site-cta-bg)]">
                   Location
                 </p>
                 <h2 className="font-serif text-3xl font-bold text-[var(--site-text-primary)] md:text-4xl">
@@ -254,7 +254,7 @@ export default async function RetreatPage({ params }: Props) {
         <div className="mx-auto max-w-7xl px-6 md:px-12">
           <Reveal>
             <div className="mb-16">
-              <p className="font-ui mb-5 text-xs font-medium uppercase tracking-[0.2em] text-[var(--site-text-muted)]">
+              <p className="font-ui mb-5 text-xs font-medium uppercase tracking-[0.2em] text-[var(--site-cta-bg)]">
                 The Programme
               </p>
               <h2 className="font-serif text-4xl font-bold leading-[1.15] text-[var(--site-text-primary)] md:text-5xl">
@@ -315,7 +315,7 @@ export default async function RetreatPage({ params }: Props) {
         <div className="mx-auto max-w-7xl px-6 md:px-12">
           <Reveal>
             <div className="mb-16">
-              <p className="font-ui mb-5 text-xs font-medium uppercase tracking-[0.2em] text-[var(--site-text-muted)]">
+              <p className="font-ui mb-5 text-xs font-medium uppercase tracking-[0.2em] text-[var(--site-cta-bg)]">
                 Pricing
               </p>
               <h2 className="font-serif text-4xl font-bold leading-[1.15] text-[var(--site-text-primary)] md:text-5xl">
@@ -403,7 +403,7 @@ export default async function RetreatPage({ params }: Props) {
           <div className="grid grid-cols-1 gap-16 lg:grid-cols-2 lg:gap-24">
             <Reveal delay={0.1}>
               <div>
-                <p className="font-ui mb-5 text-xs font-medium uppercase tracking-[0.2em] text-[var(--site-text-muted)]">
+                <p className="font-ui mb-5 text-xs font-medium uppercase tracking-[0.2em] text-[var(--site-cta-bg)]">
                   Apply
                 </p>
                 <h2 className="mb-6 font-serif text-4xl font-bold leading-[1.15] text-[var(--site-text-primary)] md:text-5xl">

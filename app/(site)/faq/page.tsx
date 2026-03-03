@@ -115,7 +115,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
         <motion.span
           animate={{ rotate: open ? 45 : 0 }}
           transition={{ duration: 0.22, ease: [0.21, 0.47, 0.32, 0.98] }}
-          className="mt-0.5 shrink-0 text-[var(--site-accent-strong)]"
+          className="mt-0.5 shrink-0 text-[var(--site-cta-bg)]"
         >
           <svg
             className="h-5 w-5"
@@ -152,7 +152,7 @@ export default function FaqPage() {
       <section className="relative overflow-hidden border-b border-[color:var(--site-on-dark-primary)]/12 bg-gradient-to-b from-[var(--site-accent-strong)] to-[var(--site-accent-deep)] pt-40 pb-24 md:pt-52 md:pb-32">
         <div className="mx-auto max-w-7xl px-6 md:px-12">
           <Reveal delay={0.1}>
-            <p className="font-ui mb-5 text-xs font-medium uppercase tracking-[0.16em] text-[var(--site-text-secondary)]">
+            <p className="font-ui mb-5 border-l-2 border-[var(--site-cta-bg)] pl-3 text-xs font-medium uppercase tracking-[0.16em] text-[var(--site-text-secondary)]">
               FAQ
             </p>
           </Reveal>
