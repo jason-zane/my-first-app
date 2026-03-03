@@ -10,6 +10,11 @@ export const metadata: Metadata = {
   title: 'Miles Between | Running Retreats',
   description:
     'Small-group running retreats with guided trail routes, thoughtful recovery time, and strong shared-table culture.',
+  icons: {
+    icon: '/miles-between-favicon.png',
+    shortcut: '/miles-between-favicon.png',
+    apple: '/miles-between-favicon.png',
+  },
 }
 
 export default async function RootLayout({
